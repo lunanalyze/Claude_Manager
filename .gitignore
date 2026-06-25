@@ -1,0 +1,13 @@
+# 환경 로컬 생성물 (원칙 4: transcript 등 로그는 git 동기화 미포함)
+local/
+
+# WebUI
+node_modules/
+webui/.next/
+webui/node_modules/
+
+# 환경 비밀/잡파일
+.env
+.env.*
+*.log
+.DS_Store
