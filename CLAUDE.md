@@ -34,8 +34,8 @@ Claude 설정·표준·세션 로그를 한곳에 모으는 **관리 허브**. W
 
 1. **[완료] WSL 한쪽에서 `transcript → 사람이 읽기 쉬운 markdown` 변환 skill**을 먼저 완성한다. (hook 아님 — 명시적 실행) → `skills/transcript-to-md/`, `~/.claude/skills/`에 심링크 설치.
 2. **[완료] Claude_Manager를 git repo**로 만들어 문서 단일 원본을 확립하고, WSL의 CLAUDE.md가 그 문서를 import하게 한다. → 전역 `~/.claude/CLAUDE.md`가 `docs/standards/index.md`를 `@import`.
-3. **[다음] Next.js WebUI**로 문서/로그를 렌더링한다.
-4. 그제서야 Windows 쪽을 clone하고, skill·문서를 쌍둥이로 정렬한다.
+3. **[완료] Next.js WebUI**로 문서/로그를 렌더링한다. → `webui/` (읽기 전용, WSL 전용). 실행: `cd webui && npm run dev`. `docs/`·`local/transcripts/`를 직접 읽음. 이번 버전은 WSL 로그만.
+4. **[다음] Windows 쪽을 clone**하고, skill·문서를 쌍둥이로 정렬한다. WebUI에 Windows 로그(`/mnt/c/Users/JBB/.claude` 변환분) 소스를 추가한다.
 5. **Project_Manager**를 얹는다.
 
 > **트리거 결정**: transcript 변환은 `SessionEnd` hook 자동 배선 대신 **skill**(사용자 명시 실행)로 한다. 이유 — 환경별 settings.json 배선 분리가 불필요해지고, fire-and-forget hook의 디버깅 난점을 피하며, 원할 때만 변환할 수 있다. (hook 스펙은 아래에 참고용으로만 남김.)
