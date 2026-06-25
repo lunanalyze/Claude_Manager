@@ -3,15 +3,16 @@
 이 파일은 Claude_Manager가 관리하는 **공유 표준의 진입점**이다. 각 환경(WSL/Windows)의
 CLAUDE.md는 이 파일을 `@import`로 참조만 한다(원본 복제 금지 — Claude_Manager/CLAUDE.md 원칙 5).
 
-> 아직 표준 항목이 비어 있다. 표준이 생기면 아래에 항목별 문서를 추가하고 여기서 링크한다.
-
 ## 표준 항목
 
-<!-- 예시: -->
-<!-- - [코드 스타일](./code-style.md) -->
-<!-- - [커밋 규칙](./commit.md) -->
+- [기술 스택 표준](./tech-stack.md) — Front: Next.js/React, Back: Java 8 + Spring Boot
+- [UI 표준](./ui/index.md) — Tailwind + shadcn/ui 기반 (토큰·컴포넌트 규칙)
 
-(작성 예정)
+아래 `@import`로 핵심 표준을 항상 컨텍스트에 싣는다. (양식별 세부 문서는 UI 인덱스에서 링크로
+연결되며, 해당 UI 작업 시 그 문서를 열어 참고한다.)
+
+@./tech-stack.md
+@./ui/index.md
 
 ## 참고자료
 
