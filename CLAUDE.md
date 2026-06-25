@@ -32,9 +32,9 @@ Claude 설정·표준·세션 로그를 한곳에 모으는 **관리 허브**. W
 
 ## 구축 순서 (이 순서를 반드시 지킨다)
 
-1. **[진행 중] WSL 한쪽에서 `transcript → 사람이 읽기 쉬운 markdown` 변환 skill**을 먼저 완성한다. (hook 아님 — 명시적 실행)
-2. Claude_Manager를 **git repo**로 만들어 문서 단일 원본을 확립하고, WSL의 CLAUDE.md가 그 문서를 import하게 한다.
-3. **Next.js WebUI**로 문서/로그를 렌더링한다.
+1. **[완료] WSL 한쪽에서 `transcript → 사람이 읽기 쉬운 markdown` 변환 skill**을 먼저 완성한다. (hook 아님 — 명시적 실행) → `skills/transcript-to-md/`, `~/.claude/skills/`에 심링크 설치.
+2. **[완료] Claude_Manager를 git repo**로 만들어 문서 단일 원본을 확립하고, WSL의 CLAUDE.md가 그 문서를 import하게 한다. → 전역 `~/.claude/CLAUDE.md`가 `docs/standards/index.md`를 `@import`.
+3. **[다음] Next.js WebUI**로 문서/로그를 렌더링한다.
 4. 그제서야 Windows 쪽을 clone하고, skill·문서를 쌍둥이로 정렬한다.
 5. **Project_Manager**를 얹는다.
 
