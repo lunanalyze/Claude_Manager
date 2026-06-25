@@ -10,6 +10,7 @@ UI 작업 시 아래 양식별 세부 표준을 함께 참고한다:
 - [Button](./button.md)
 - [Table](./table.md)
 - [Image](./image.md)
+- [Chart / Graph](./chart.md)
 
 ---
 

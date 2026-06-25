@@ -1,6 +1,125 @@
 "use client";
 import { useState } from "react";
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 import "./preview.css";
+
+const TREND = [
+  { m: "1월", 매출: 240, 비용: 150 }, { m: "2월", 매출: 300, 비용: 170 },
+  { m: "3월", 매출: 280, 비용: 160 }, { m: "4월", 매출: 360, 비용: 200 },
+  { m: "5월", 매출: 420, 비용: 230 }, { m: "6월", 매출: 453, 비용: 240 },
+];
+const DEPT = [
+  { name: "영업", value: 453 }, { name: "개발", value: 312 },
+  { name: "디자인", value: 198 }, { name: "기획", value: 120 },
+];
+const COMP = [
+  { name: "완료", value: 62 }, { name: "대기", value: 23 }, { name: "실패", value: 15 },
+];
+
+function ChartTip({ active, payload, label, unit = "만원" }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rc-tip">
+      {label != null && <div className="k" style={{ marginBottom: 4 }}>{label}</div>}
+      {payload.map((p, i) => (
+        <div key={i}>
+          <span className="k">{p.name}: </span>
+          <span className="v">{Number(p.value).toLocaleString("ko-KR")}{unit}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChartsSection({ dark }) {
+  const CH = dark
+    ? ["217 91% 60%", "263 85% 70%", "160 65% 55%", "38 95% 62%", "340 80% 68%"]
+    : ["221 83% 53%", "262 83% 58%", "160 60% 45%", "35 92% 55%", "340 75% 55%"];
+  const c = (i) => `hsl(${CH[i]})`;
+  const muted = dark ? "hsl(215 20% 65%)" : "hsl(215 16% 47%)";
+  const grid = dark ? "hsl(217 33% 25%)" : "hsl(214 32% 88%)";
+  const tick = { fill: muted, fontSize: 12 };
+
+  return (
+    <section>
+      <h2>Chart / Graph</h2>
+      <p className="desc">Recharts + --chart-* 토큰. 옅은 가로 그리드 · 그라데이션 영역 · 둥근 막대 · 도넛 중앙 라벨.</p>
+      <div className="charts">
+        {/* Area — 추세 */}
+        <div className="chart-card">
+          <p className="ct">월별 매출·비용 추세</p>
+          <p className="cs">Area · 시간 추세</p>
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={TREND} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+              <defs>
+                <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c(0)} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={c(0)} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c(1)} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={c(1)} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke={grid} strokeDasharray="3 3" />
+              <XAxis dataKey="m" tick={tick} axisLine={false} tickLine={false} />
+              <YAxis tick={tick} axisLine={false} tickLine={false} width={36} />
+              <Tooltip content={<ChartTip />} cursor={{ stroke: grid }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Area type="monotone" dataKey="매출" stroke={c(0)} strokeWidth={2} fill="url(#g1)" />
+              <Area type="monotone" dataKey="비용" stroke={c(1)} strokeWidth={2} fill="url(#g2)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Bar — 범주 비교 */}
+        <div className="chart-card">
+          <p className="ct">부서별 매출</p>
+          <p className="cs">Bar · 범주 비교</p>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={DEPT} margin={{ top: 8, right: 8, left: -12, bottom: 0 }} barCategoryGap="30%">
+              <CartesianGrid vertical={false} stroke={grid} strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={tick} axisLine={false} tickLine={false} />
+              <YAxis tick={tick} axisLine={false} tickLine={false} width={36} />
+              <Tooltip content={<ChartTip />} cursor={{ fill: "hsl(0 0% 50% / .08)" }} />
+              <Bar dataKey="value" name="매출" radius={[6, 6, 0, 0]}>
+                {DEPT.map((_, i) => <Cell key={i} fill={c(i)} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Donut — 구성비 */}
+        <div className="chart-card">
+          <p className="ct">처리 상태 구성비</p>
+          <p className="cs">Donut · 구성비(≤5 범주)</p>
+          <div style={{ position: "relative" }}>
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Tooltip content={<ChartTip unit="건" />} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Pie data={COMP} dataKey="value" nameKey="name" cx="50%" cy="45%"
+                  innerRadius={52} outerRadius={78} paddingAngle={2} stroke="none">
+                  {COMP.map((_, i) => <Cell key={i} fill={c(i)} />)}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{
+              position: "absolute", top: "45%", left: 0, right: 0, transform: "translateY(-50%)",
+              textAlign: "center", pointerEvents: "none",
+            }}>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>100</div>
+              <div style={{ fontSize: 11, color: muted }}>총 건수</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const COLORS = [
   ["--background", "background"],
@@ -176,6 +295,8 @@ export default function UiPreview() {
             </div>
           </div>
         </section>
+
+        <ChartsSection dark={dark} />
       </div>
     </div>
   );
