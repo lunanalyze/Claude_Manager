@@ -18,6 +18,10 @@ export default function RootLayout({ children }) {
           <nav className="sidebar">
             <h1><a href="/">Claude_Manager</a></h1>
             <div className="sub">읽기 전용 대시보드</div>
+            <div className="group">
+              <div className="label">미리보기</div>
+              <ul><li><a href="/ui-preview">🎨 UI 표준 미리보기</a></li></ul>
+            </div>
             {groups.map((g) => (
               <div className="group" key={g.key}>
                 <div className="label">{g.label}</div>

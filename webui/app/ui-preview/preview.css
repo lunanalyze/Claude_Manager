@@ -1,0 +1,181 @@
+/* UI 표준 미리보기 전용 스타일.
+   docs/standards/ui/* 의 토큰·컴포넌트 규칙을 그대로 시각화한다.
+   .uiprev 스코프로 묶어 마크다운 대시보드 스타일과 충돌하지 않게 한다. */
+
+.uiprev {
+  /* === 토큰 (light) — docs/standards/ui/index.md 와 동일 === */
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --card: 0 0% 100%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+  --radius: 0.5rem;
+
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", "Noto Sans KR", sans-serif;
+  min-height: 100vh;
+  padding: 32px 40px 80px;
+}
+
+.uiprev.dark {
+  --background: 222.2 47.4% 11.2%;
+  --foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --card: 222.2 47.4% 13%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 55%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 50%;
+  --destructive-foreground: 210 40% 98%;
+}
+
+.uiprev .wrap { max-width: 980px; margin: 0 auto; }
+
+.uiprev .topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.uiprev .topbar h1 { font-size: 30px; line-height: 36px; font-weight: 700; margin: 0; }
+.uiprev .lead { color: hsl(var(--muted-foreground)); margin: 0 0 28px; font-size: 14px; }
+
+.uiprev section {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  padding: 22px 24px;
+  margin: 22px 0;
+  background: hsl(var(--card));
+}
+.uiprev section > h2 {
+  font-size: 20px; line-height: 28px; font-weight: 600; margin: 0 0 4px;
+}
+.uiprev section > .desc { color: hsl(var(--muted-foreground)); font-size: 13px; margin: 0 0 18px; }
+.uiprev .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.uiprev .row + .row { margin-top: 14px; }
+.uiprev .tag { font-size: 11px; color: hsl(var(--muted-foreground)); width: 100%; margin-top: 4px; }
+
+/* === Button (docs/standards/ui/button.md) === */
+.uiprev .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--radius);
+  font-size: 14px; font-weight: 500; line-height: 1;
+  border: 1px solid transparent; cursor: pointer;
+  transition: background-color .15s, color .15s, border-color .15s, opacity .15s;
+  height: 40px; padding: 0 16px; white-space: nowrap;
+}
+.uiprev .btn:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.uiprev .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.uiprev .btn-default { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.uiprev .btn-default:hover:not(:disabled) { background: hsl(var(--primary) / .9); }
+.uiprev .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.uiprev .btn-secondary:hover:not(:disabled) { background: hsl(var(--secondary) / .8); }
+.uiprev .btn-outline {
+  background: transparent; color: hsl(var(--foreground)); border-color: hsl(var(--border));
+}
+.uiprev .btn-outline:hover:not(:disabled) { background: hsl(var(--muted)); }
+.uiprev .btn-ghost { background: transparent; color: hsl(var(--foreground)); }
+.uiprev .btn-ghost:hover:not(:disabled) { background: hsl(var(--muted)); }
+.uiprev .btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+.uiprev .btn-destructive:hover:not(:disabled) { background: hsl(var(--destructive) / .9); }
+.uiprev .btn-link {
+  background: transparent; color: hsl(var(--primary)); padding: 0; height: auto;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+.uiprev .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.uiprev .btn-lg { height: 44px; padding: 0 22px; font-size: 15px; }
+.uiprev .btn-icon { width: 40px; height: 40px; padding: 0; }
+
+.uiprev .spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  display: inline-block; animation: uiprev-spin .7s linear infinite;
+}
+@keyframes uiprev-spin { to { transform: rotate(360deg); } }
+
+/* === Typography (docs/standards/ui/typography.md) === */
+.uiprev .type-row { display: flex; align-items: baseline; gap: 16px; padding: 7px 0; border-bottom: 1px dashed hsl(var(--border)); }
+.uiprev .type-row:last-child { border-bottom: none; }
+.uiprev .type-row .meta { width: 190px; flex: 0 0 190px; color: hsl(var(--muted-foreground)); font-size: 12px; }
+.uiprev .t-display { font-size: 30px; line-height: 36px; font-weight: 700; }
+.uiprev .t-h1 { font-size: 24px; line-height: 32px; font-weight: 600; }
+.uiprev .t-h2 { font-size: 20px; line-height: 28px; font-weight: 600; }
+.uiprev .t-h3 { font-size: 18px; line-height: 28px; font-weight: 500; }
+.uiprev .t-body { font-size: 16px; line-height: 24px; }
+.uiprev .t-sm { font-size: 14px; line-height: 20px; color: hsl(var(--muted-foreground)); }
+.uiprev .t-xs { font-size: 12px; line-height: 16px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+
+/* === Colors === */
+.uiprev .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; }
+.uiprev .swatch { border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden; }
+.uiprev .swatch .chip { height: 56px; }
+.uiprev .swatch .name { padding: 7px 10px; font-size: 12px; }
+.uiprev .swatch .name b { display: block; font-weight: 600; }
+.uiprev .swatch .name span { color: hsl(var(--muted-foreground)); font-size: 11px; }
+
+/* === Table (docs/standards/ui/table.md) === */
+.uiprev .table-wrap { overflow-x: auto; border: 1px solid hsl(var(--border)); border-radius: var(--radius); }
+.uiprev table.ui-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.uiprev .ui-table thead th {
+  text-align: left; font-size: 12px; font-weight: 500; color: hsl(var(--muted-foreground));
+  padding: 10px 14px; border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .4);
+}
+.uiprev .ui-table tbody td { padding: 11px 14px; border-bottom: 1px solid hsl(var(--border)); }
+.uiprev .ui-table tbody tr:last-child td { border-bottom: none; }
+.uiprev .ui-table tbody tr:hover { background: hsl(var(--muted) / .5); }
+.uiprev .num { text-align: right; font-variant-numeric: tabular-nums; }
+.uiprev .empty-cell { text-align: center; color: hsl(var(--muted-foreground)); padding: 28px 14px; }
+.uiprev .skeleton {
+  height: 12px; border-radius: 4px; background: hsl(var(--muted));
+  animation: uiprev-pulse 1.4s ease-in-out infinite;
+}
+@keyframes uiprev-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+/* status pill (Badge 표준은 아직 미정 — 예시) */
+.uiprev .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.uiprev .pill-ok { background: hsl(142 70% 45% / .15); color: hsl(142 64% 32%); }
+.uiprev .pill-wait { background: hsl(38 92% 50% / .16); color: hsl(32 80% 38%); }
+.uiprev .pill-fail { background: hsl(var(--destructive) / .15); color: hsl(var(--destructive)); }
+.uiprev.dark .pill-ok { color: hsl(142 60% 60%); }
+.uiprev.dark .pill-wait { color: hsl(40 90% 62%); }
+.uiprev.dark .pill-fail { color: hsl(0 80% 70%); }
+
+/* === Image / Avatar (docs/standards/ui/image.md) === */
+.uiprev .img-frame {
+  position: relative; aspect-ratio: 16 / 9; width: 320px; max-width: 100%;
+  border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(262 83% 58%) 100%);
+}
+.uiprev .img-frame .cap {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,.55)); color: #fff; font-size: 12px;
+}
+.uiprev .avatar {
+  width: 44px; height: 44px; border-radius: 999px; border: 1px solid hsl(var(--border));
+  display: inline-flex; align-items: center; justify-content: center;
+  background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-weight: 600; font-size: 14px;
+}
+
+/* toggle */
+.uiprev .toggle {
+  border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  color: hsl(var(--foreground)); border-radius: var(--radius);
+  height: 36px; padding: 0 14px; font-size: 13px; cursor: pointer;
+}
+.uiprev .toggle:hover { background: hsl(var(--muted)); }
