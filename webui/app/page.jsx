@@ -1,24 +1,86 @@
-import { getSidebarGroups } from "@/lib/content";
+import { getCatalog } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
+const SHARE_BADGE = {
+  git: { label: "공유", cls: "b-git", title: "git 단일 원본 — 양쪽 환경이 clone 해 읽음" },
+  env: { label: "환경전용", cls: "b-env", title: "이 환경에만 적용 — git 공유 안 함" },
+  gen: { label: "생성물", cls: "b-gen", title: "로컬 생성 로그 — git 미포함" },
+};
+
+function fmtTime(ms) {
+  if (!ms) return "";
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function Card({ sp }) {
+  const badge = SHARE_BADGE[sp.share] ?? SHARE_BADGE.env;
+  const meta = sp.exists
+    ? sp.kind === "dir"
+      ? `${sp.count ?? 0}개 항목`
+      : `${sp.size ?? 0} B`
+    : "없음";
+  const inner = (
+    <>
+      <div className="ct-head">
+        <span className="ct-icon">{sp.icon}</span>
+        <span className="ct-title">{sp.title}</span>
+        <span className={`ct-badge ${badge.cls}`} title={badge.title}>{badge.label}</span>
+      </div>
+      <p className="ct-desc">{sp.desc}</p>
+      <div className="ct-foot">
+        <code className="ct-path">{sp.rootPath.replace("/home/raspvery", "~").replace("/mnt/c/Users/JBB", "C:…")}/{sp.rel}</code>
+        <span className={`ct-status ${sp.exists ? "on" : "off"}`}>
+          {sp.exists ? "●" : "○"} {meta}
+          {sp.isSymlink ? " · 심링크" : ""}
+          {sp.exists && sp.mtime ? ` · ${fmtTime(sp.mtime)}` : ""}
+        </span>
+      </div>
+    </>
+  );
+  return sp.exists ? (
+    <a className="ct-card" href={sp.href}>{inner}</a>
+  ) : (
+    <div className="ct-card is-empty">{inner}</div>
+  );
+}
+
 export default function Home() {
-  const groups = getSidebarGroups();
-  const counts = Object.fromEntries(groups.map((g) => [g.key, g.items.length]));
+  const catalog = getCatalog();
+  const total = catalog.reduce((n, g) => n + g.spaces.length, 0);
+  const live = catalog.reduce((n, g) => n + g.spaces.filter((s) => s.exists).length, 0);
+
   return (
-    <div className="md">
-      <h1>Claude_Manager 대시보드</h1>
-      <p>좌측에서 문서나 세션 로그를 선택하세요. 이 대시보드는 <strong>읽기 전용</strong>이며,
-        repo의 <code>docs/</code>와 <code>local/transcripts/</code>를 직접 읽어 렌더링합니다.</p>
-      <h2>현재 항목</h2>
-      <ul>
-        <li>문서(docs): <strong>{counts.docs ?? 0}</strong>개</li>
-        <li>세션 로그(WSL): <strong>{counts.transcripts ?? 0}</strong>개</li>
-      </ul>
-      <p style={{ color: "var(--muted)", fontSize: "13px" }}>
-        세션 로그는 <code>transcript-to-md</code> skill로 변환된 markdown입니다.
-        Windows 로그 연동은 구축 순서 4단계에서 추가됩니다.
-      </p>
+    <div className="tower">
+      <header className="tower-hero">
+        <h1>🗼 관제탑 (Control Tower)</h1>
+        <p>
+          Claude의 동작을 제어·관리하는 <strong>모든 파일 공간</strong>을 한곳에서 조망합니다.
+          <strong> WSL</strong>과 <strong>Windows</strong>는 별개 환경으로 각각 관리하고, 공유 콘텐츠만
+          git 단일 원본으로 둡니다. 카드를 눌러 실제 파일을 열람하세요 <em>(읽기 전용)</em>.
+        </p>
+        <div className="tower-stats">
+          <span><b>{live}</b>/{total} 공간 활성</span>
+          <span className="dot" />
+          <a href="/ui-preview">🎨 UI 표준 미리보기</a>
+        </div>
+      </header>
+
+      {catalog.map((g) => (
+        <section className="tower-group" key={g.key}>
+          <div className="tg-head">
+            <h2>{g.label}</h2>
+            <p>{g.note}</p>
+          </div>
+          <div className="ct-grid">
+            {g.spaces.map((sp) => (
+              <Card sp={sp} key={sp.root + "/" + sp.rel} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

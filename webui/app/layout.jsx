@@ -19,8 +19,18 @@ export default function RootLayout({ children }) {
             <h1><a href="/">Claude_Manager</a></h1>
             <div className="sub">읽기 전용 대시보드</div>
             <div className="group">
-              <div className="label">미리보기</div>
-              <ul><li><a href="/ui-preview">🎨 UI 표준 미리보기</a></li></ul>
+              <div className="label">관제</div>
+              <ul>
+                <li><a href="/">🗼 관제탑 (전체 지형)</a></li>
+                <li><a href="/ui-preview">🎨 UI 표준 미리보기</a></li>
+              </ul>
+            </div>
+            <div className="group">
+              <div className="label">환경</div>
+              <ul>
+                <li><a href="/browse/wsl">🐧 WSL ~/.claude</a></li>
+                <li><a href="/browse/win">🪟 Windows .claude</a></li>
+              </ul>
             </div>
             {groups.map((g) => (
               <div className="group" key={g.key}>

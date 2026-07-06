@@ -46,7 +46,8 @@ function toItem(absPath) {
   return {
     title: titleFromFile(absPath),
     slug,
-    href: "/view/" + slug.map(encodeURIComponent).join("/"),
+    // repo 루트 기준 상대경로를 browse 라우트(rootKey=repo)로 연결
+    href: "/browse/repo/" + slug.map(encodeURIComponent).join("/"),
     rel: slug.join("/"),
     mtime: fs.statSync(absPath).mtimeMs,
   };
