@@ -1,0 +1,203 @@
+/* UI 표준 워크숍 — 후보 렌더 + 조립 페이지 공용 스타일.
+   .ws 스코프. 후보들은 CSS 변수 토큰을 상속받아 그리므로,
+   컬러 테마(.theme-*)·타이포(.type-*)를 상위에 걸면 전체가 함께 바뀐다. */
+
+.ws {
+  /* 기본 토큰 (light) */
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --card: 0 0% 100%;
+  --border: 214 32% 90%;
+  --input: 214 32% 88%;
+  --ring: 221 83% 53%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --radius: 0.5rem;
+  --chart-1: 221 83% 53%;
+  --chart-2: 262 83% 63%;
+  --chart-3: 199 89% 48%;
+  --ok: 142 64% 32%; --ok-bg: 142 70% 45%;
+  --wait: 32 80% 38%; --wait-bg: 38 92% 50%;
+  --fail: 0 72% 45%; --fail-bg: 0 72% 51%;
+
+  color: hsl(var(--foreground));
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Noto Sans KR", sans-serif;
+}
+
+/* ── 컬러 테마 후보 ─────────────────────────── */
+.theme-blue    { --primary: 221 83% 53%; --ring: 221 83% 53%; --chart-1: 221 83% 53%; --chart-2: 262 83% 63%; --chart-3: 199 89% 48%; }
+.theme-violet  { --primary: 262 83% 58%; --ring: 262 83% 58%; --chart-1: 262 83% 58%; --chart-2: 291 70% 55%; --chart-3: 221 83% 60%; }
+.theme-emerald { --primary: 160 84% 33%; --ring: 160 84% 33%; --chart-1: 160 84% 36%; --chart-2: 173 70% 40%; --chart-3: 130 55% 45%; }
+.theme-slate   { --primary: 215 28% 27%; --ring: 215 28% 27%; --chart-1: 215 28% 35%; --chart-2: 215 16% 55%; --chart-3: 200 30% 50%; }
+
+/* ── 타이포 후보 (조립 시 위계 결정) ──────────── */
+.ttl, .sub, .txt { margin: 0; }
+.type-contrast .ttl { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+.type-contrast .sub { font-size: 18px; font-weight: 700; line-height: 1.3; }
+.type-contrast .txt { font-size: 14px; font-weight: 400; line-height: 1.5; }
+.type-balanced .ttl { font-size: 25px; font-weight: 600; letter-spacing: -.01em; line-height: 1.3; }
+.type-balanced .sub { font-size: 18px; font-weight: 600; line-height: 1.4; }
+.type-balanced .txt { font-size: 15px; font-weight: 400; line-height: 1.7; }
+.type-compact  .ttl { font-size: 21px; font-weight: 600; line-height: 1.25; }
+.type-compact  .sub { font-size: 15.5px; font-weight: 600; line-height: 1.3; }
+.type-compact  .txt { font-size: 13px; font-weight: 400; line-height: 1.45; }
+
+/* ── 버튼 후보 ─────────────────────────────── */
+.wb {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 40px; padding: 0 18px; font-size: 14px; font-weight: 500; line-height: 1;
+  border: 1px solid transparent; cursor: pointer;
+  transition: background-color .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+.wb:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.b-solid   { border-radius: var(--radius); background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.b-solid:hover { background: hsl(var(--primary) / .9); }
+.b-soft    { border-radius: var(--radius); background: hsl(var(--primary) / .12); color: hsl(var(--primary)); }
+.b-soft:hover { background: hsl(var(--primary) / .2); }
+.b-outline { border-radius: var(--radius); background: transparent; color: hsl(var(--primary)); border-color: hsl(var(--primary) / .5); }
+.b-outline:hover { background: hsl(var(--primary) / .08); }
+.b-pill    { border-radius: 999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 0 22px; }
+.b-pill:hover { background: hsl(var(--primary) / .9); }
+.wb.ghost { background: transparent; color: hsl(var(--muted-foreground)); border-radius: var(--radius); }
+.wb.ghost:hover { background: hsl(var(--muted)); }
+
+/* ── 카드 후보 ─────────────────────────────── */
+.wc { border-radius: var(--radius); padding: 16px 18px; }
+.card-flat     { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+.card-elevated { border: 1px solid hsl(var(--border) / .6); background: hsl(var(--card)); box-shadow: 0 6px 18px -6px rgb(15 23 42 / .18); }
+.card-filled   { border: 1px solid transparent; background: hsl(var(--muted) / .7); }
+.wc .kpi-l { font-size: 12.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px; }
+.wc .kpi-v { font-size: 21px; font-weight: 700; letter-spacing: -.01em; }
+.wc .kpi-d { font-size: 12px; font-weight: 600; margin-left: 2px; }
+.kpi-d.up { color: hsl(var(--ok)); }
+.kpi-d.down { color: hsl(var(--fail)); }
+
+/* ── 테이블 후보 ───────────────────────────── */
+.wt { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.wt thead th { text-align: left; font-size: 12px; font-weight: 500; color: hsl(var(--muted-foreground)); padding: 9px 12px; }
+.wt tbody td { padding: 10px 12px; }
+.wt .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl-lined thead th { border-bottom: 1px solid hsl(var(--border)); }
+.tbl-lined tbody td { border-bottom: 1px solid hsl(var(--border)); }
+.tbl-lined tbody tr:last-child td { border-bottom: none; }
+.tbl-zebra thead th { border-bottom: 1px solid hsl(var(--border)); }
+.tbl-zebra tbody tr:nth-child(odd) { background: hsl(var(--muted) / .5); }
+.tbl-minimal thead th { border-bottom: 2px solid hsl(var(--border)); }
+.tbl-minimal tbody tr:hover { background: hsl(var(--muted) / .5); }
+
+/* ── 뱃지 후보 ─────────────────────────────── */
+.wbadge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+/* soft */
+.bdg-soft { padding: 3px 10px; border-radius: 999px; }
+.bdg-soft.ok   { background: hsl(var(--ok-bg) / .16);   color: hsl(var(--ok)); }
+.bdg-soft.wait { background: hsl(var(--wait-bg) / .18); color: hsl(var(--wait)); }
+.bdg-soft.fail { background: hsl(var(--fail-bg) / .16); color: hsl(var(--fail)); }
+/* solid */
+.bdg-solid { padding: 3px 10px; border-radius: 6px; color: #fff; }
+.bdg-solid.ok   { background: hsl(var(--ok-bg)); }
+.bdg-solid.wait { background: hsl(var(--wait-bg)); }
+.bdg-solid.fail { background: hsl(var(--fail-bg)); }
+/* dot outline */
+.bdg-dot { padding: 3px 10px 3px 8px; border-radius: 999px; border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); }
+.bdg-dot .d { width: 7px; height: 7px; border-radius: 50%; }
+.bdg-dot.ok .d   { background: hsl(var(--ok-bg)); }
+.bdg-dot.wait .d { background: hsl(var(--wait-bg)); }
+.bdg-dot.fail .d { background: hsl(var(--fail-bg)); }
+
+/* ── 인풋 후보 ─────────────────────────────── */
+.wi-field { display: flex; flex-direction: column; gap: 5px; }
+.wi-field label { font-size: 12.5px; color: hsl(var(--muted-foreground)); }
+.wi { height: 40px; padding: 0 12px; font-size: 14px; color: hsl(var(--foreground)); background: hsl(var(--background)); width: 100%; }
+.wi:focus { outline: none; }
+.inp-outline { border: 1px solid hsl(var(--input)); border-radius: var(--radius); }
+.inp-outline:focus { border-color: hsl(var(--ring)); box-shadow: 0 0 0 3px hsl(var(--ring) / .18); }
+.inp-filled { border: 1px solid transparent; border-radius: var(--radius); background: hsl(var(--muted)); }
+.inp-filled:focus { background: hsl(var(--background)); border-color: hsl(var(--ring)); }
+.inp-underline { border: none; border-bottom: 1.5px solid hsl(var(--input)); border-radius: 0; padding-left: 2px; background: transparent; }
+.inp-underline:focus { border-bottom-color: hsl(var(--ring)); }
+
+/* ── 차트 카드 공용 ─────────────────────────── */
+.chart-frame { border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 12px 12px 4px; background: hsl(var(--card)); }
+.chart-frame .cf-t { font-size: 12.5px; font-weight: 600; margin: 0 0 8px; }
+.rc-tip { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 7px 10px; font-size: 12px; box-shadow: 0 4px 12px rgb(0 0 0 / .1); }
+.rc-tip .k { color: hsl(var(--muted-foreground)); }
+.rc-tip .v { font-weight: 600; }
+
+/* ══════════════════════════════════════════════
+   워크숍 크롬 (선택 UI) — 다크 대시보드 위에 얹힘
+   ══════════════════════════════════════════════ */
+.wsx { max-width: 1080px; }
+.wsx-hero h1 { font-size: 1.9rem; margin: 0 0 8px; }
+.wsx-hero p { color: var(--text); max-width: 760px; margin: 0 0 16px; }
+.wsx-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.wsx-bar { flex: 0 0 220px; height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.wsx-bar > i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.wsx-progress .n { color: var(--muted); font-size: 13px; }
+.wsx-progress a.result-link { margin-left: auto; }
+.result-link.disabled { pointer-events: none; opacity: .4; }
+
+.el-section { margin-top: 34px; border-top: 1px solid var(--border); padding-top: 20px; }
+.el-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.el-head h2 { font-size: 1.15rem; margin: 0; }
+.el-head .done-tag { font-size: 11.5px; color: #6ed69a; }
+.el-head .todo-tag { font-size: 11.5px; color: var(--muted); }
+.el-desc { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+
+.cand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.cand {
+  border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden;
+  background: var(--panel); display: flex; flex-direction: column;
+}
+.cand.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(110 168 254 / .18); }
+.cand-canvas {
+  /* 후보를 밝은 캔버스에 올려 실제 제품처럼 보이게 */
+  background: hsl(var(--background)); color: hsl(var(--foreground));
+  padding: 18px; min-height: 150px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+}
+.cand-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
+.cand-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.cand-note { font-size: 11.5px; color: var(--muted); flex: 1 1 auto; }
+.cand-pick {
+  border: 1px solid var(--border); background: transparent; color: var(--text);
+  font-size: 12.5px; padding: 5px 12px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+}
+.cand-pick:hover { border-color: var(--accent); color: var(--accent); }
+.cand.selected .cand-pick { background: var(--accent); color: #0b1220; border-color: var(--accent); font-weight: 600; }
+.cand.selected .cand-pick::before { content: "✓ "; }
+
+/* 캔버스 내부 데모 배치 */
+.demo-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.demo-swatches { display: flex; gap: 8px; }
+.demo-swatch { width: 34px; height: 34px; border-radius: 8px; border: 1px solid hsl(var(--border)); }
+.demo-tblwrap { width: 100%; }
+.demo-full { width: 100%; }
+
+/* ══ 조립 결과 페이지 ══════════════════════════ */
+.res-page { max-width: 1080px; }
+.res-banner {
+  display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+  padding: 16px 20px; margin-bottom: 20px;
+}
+.res-banner h1 { font-size: 1.4rem; margin: 8px 0 4px; }
+.res-banner p { color: var(--muted); font-size: 13px; margin: 0; max-width: 520px; }
+.res-legend { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; max-width: 360px; }
+.res-chip { font-size: 11px; color: var(--muted); background: var(--bg); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 999px; }
+.res-chip b { color: var(--accent); }
+
+/* 조립 대시보드 본체 (밝은 캔버스) */
+.res-root {
+  background: hsl(var(--background)); color: hsl(var(--foreground));
+  border: 1px solid var(--border); border-radius: 14px; padding: 24px 26px 28px;
+}
+.res-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.res-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.res-mid { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+.res-tbl-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }

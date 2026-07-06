@@ -22,7 +22,8 @@ export default function RootLayout({ children }) {
               <div className="label">관제</div>
               <ul>
                 <li><a href="/">🗼 관제탑 (전체 지형)</a></li>
-                <li><a href="/ui-preview">🎨 UI 표준 미리보기</a></li>
+                <li><a href="/ui-standard">🎛️ UI 표준 워크숍</a></li>
+                <li><a href="/ui-standard/result">🧩 조립된 표준 페이지</a></li>
               </ul>
             </div>
             <div className="group">
