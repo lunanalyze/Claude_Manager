@@ -1,0 +1,185 @@
+<!doctype html>
+<!--
+  project-map — 자립형 아키텍처 시각화 (외부 의존 0).
+  이 파일을 복사해 {{...}} 자리표시자와 <!-- INJECT: ... --> 구역을 실제 스캔 결과로 채운다.
+  규칙: pm-title = 자연어(사람이 읽는 이름), pm-sub = 식별자(경로·심볼) 보조, pm-desc = 한 줄 목적.
+  계층 노드가 없으면 그 <section>은 통째로 지운다. 있는 계층만 남긴다.
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{PROJECT_NAME}} · 프로젝트 맵</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --border:#e4e7ee; --text:#1f2733; --muted:#667085; --code:#f1f3f7;
+    --entry:#2563eb; --endpoint:#7c3aed; --engine:#0d9488; --data:#d97706; --external:#e11d48; --job:#475569;
+    --radius:.5rem;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0f1115; --panel:#161a22; --border:#262b36; --text:#d7dce4; --muted:#8a93a3; --code:#11141a;
+    --entry:#60a5fa; --endpoint:#a78bfa; --engine:#2dd4bf; --data:#fbbf24; --external:#fb7185; --job:#94a3b8;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;line-height:1.6}
+  .pm{max-width:1100px;margin:0 auto;padding:32px 24px 56px}
+  .pm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .pm-head h1{font-size:1.8rem;margin:0 0 4px}
+  .pm-sub2{color:var(--muted);font-size:13px;margin:0}
+  .pm-badge{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;
+    background:color-mix(in srgb,var(--endpoint) 16%,transparent);color:var(--endpoint)}
+
+  .pm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 8px}
+  .pm-stat{border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);background:var(--panel);padding:13px 15px}
+  .pm-stat b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .pm-stat span{font-size:12px;color:var(--muted)}
+
+  .pm-flow{display:flex;flex-direction:column;margin-top:14px}
+  .pm-layer{border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);background:var(--panel);
+    padding:14px 16px;border-left:4px solid var(--lc,var(--muted))}
+  .pm-layer[data-layer=entry]{--lc:var(--entry)}
+  .pm-layer[data-layer=endpoint]{--lc:var(--endpoint)}
+  .pm-layer[data-layer=engine]{--lc:var(--engine)}
+  .pm-layer[data-layer=data]{--lc:var(--data)}
+  .pm-layer[data-layer=external]{--lc:var(--external)}
+  .pm-layer[data-layer=job]{--lc:var(--job)}
+  .pm-layer-label{font-weight:700;font-size:13px;margin-bottom:11px;color:var(--lc,var(--text));
+    display:flex;align-items:baseline;gap:8px}
+  .pm-layer-label em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .pm-nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .pm-node{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);padding:11px 13px}
+  .pm-title{font-weight:600;font-size:13.5px}
+  .pm-sub{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--muted);
+    margin:3px 0;word-break:break-all}
+  .pm-desc{font-size:12.5px;color:var(--muted)}
+
+  .pm-conn{align-self:center;width:2px;height:20px;background:var(--border)}
+  .pm-conn::after{content:"▼";display:block;text-align:center;color:var(--border);font-size:10px;margin-top:16px}
+
+  .pm-aux{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  @media(max-width:760px){.pm-aux{grid-template-columns:1fr}.pm-stats{grid-template-columns:repeat(2,1fr)}}
+
+  .pm-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:24px;font-size:12px;color:var(--muted)}
+  .pm-legend span{display:inline-flex;align-items:center;gap:6px}
+  .pm-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .pm-foot{margin-top:20px;font-size:12px;color:var(--muted)}
+  .pm-foot code{background:var(--code);padding:2px 6px;border-radius:5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="pm">
+  <header class="pm-head">
+    <div>
+      <h1>{{PROJECT_NAME}}</h1>
+      <p class="pm-sub2">{{STACK}} · 스캔 {{SCANNED_AT}}</p>
+    </div>
+    <div class="pm-badge">동작 구조 맵</div>
+  </header>
+
+  <div class="pm-stats">
+    <!-- INJECT:stats — 실제 수치로 채우고 필요 타일만 남긴다 -->
+    <div class="pm-stat"><b>{{FILE_COUNT}}</b><span>스캔한 파일</span></div>
+    <div class="pm-stat"><b>{{ENDPOINT_COUNT}}</b><span>엔드포인트</span></div>
+    <div class="pm-stat"><b>{{ENGINE_COUNT}}</b><span>엔진(핵심 모듈)</span></div>
+    <div class="pm-stat"><b>{{EXTERNAL_COUNT}}</b><span>외부 연동</span></div>
+  </div>
+
+  <div class="pm-flow">
+    <!-- 각 계층: 노드가 있으면 남기고, 없으면 section+뒤 pm-conn 삭제.
+         노드 예시 하나만 남겨두니 실제 노드로 교체/증식할 것. -->
+
+    <section class="pm-layer" data-layer="entry">
+      <div class="pm-layer-label">진입점 <em>Entry</em></div>
+      <div class="pm-nodes">
+        <!-- INJECT:entry -->
+        <article class="pm-node">
+          <div class="pm-title">서버 부트스트랩</div>
+          <div class="pm-sub">src/index.ts · main()</div>
+          <div class="pm-desc">앱을 초기화하고 HTTP 서버를 띄운다.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <section class="pm-layer" data-layer="endpoint">
+      <div class="pm-layer-label">엔드포인트 <em>Endpoints</em></div>
+      <div class="pm-nodes">
+        <!-- INJECT:endpoint -->
+        <article class="pm-node">
+          <div class="pm-title">주문 생성 API</div>
+          <div class="pm-sub">POST /orders · routes/orders.ts</div>
+          <div class="pm-desc">새 주문을 받아 검증 후 저장 요청.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <section class="pm-layer" data-layer="engine">
+      <div class="pm-layer-label">엔진 (핵심 로직) <em>Engines</em></div>
+      <div class="pm-nodes">
+        <!-- INJECT:engine -->
+        <article class="pm-node">
+          <div class="pm-title">주문 처리 로직</div>
+          <div class="pm-sub">services/orderService.ts</div>
+          <div class="pm-desc">재고 확인·가격 계산·상태 전이를 담당.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <section class="pm-layer" data-layer="data">
+      <div class="pm-layer-label">데이터 · 저장 <em>Data</em></div>
+      <div class="pm-nodes">
+        <!-- INJECT:data -->
+        <article class="pm-node">
+          <div class="pm-title">주문 저장소</div>
+          <div class="pm-sub">db/orders (PostgreSQL)</div>
+          <div class="pm-desc">주문 레코드 영속화.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <section class="pm-layer" data-layer="external">
+      <div class="pm-layer-label">외부 연동 <em>External</em></div>
+      <div class="pm-nodes">
+        <!-- INJECT:external -->
+        <article class="pm-node">
+          <div class="pm-title">결제 게이트웨이</div>
+          <div class="pm-sub">lib/stripe.ts</div>
+          <div class="pm-desc">Stripe로 결제 승인 요청.</div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <!-- 있을 때만: 백그라운드·스케줄 / 설정·빌드 -->
+  <div class="pm-aux">
+    <!-- INJECT:aux — 없으면 이 블록 삭제 -->
+    <section class="pm-layer" data-layer="job">
+      <div class="pm-layer-label">백그라운드 · 스케줄 <em>Jobs</em></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">일일 정산 배치</div>
+          <div class="pm-sub">jobs/settle.ts · cron 0 2 * * *</div>
+          <div class="pm-desc">매일 새벽 정산 집계.</div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <div class="pm-legend">
+    <span><i style="background:var(--entry)"></i>진입점</span>
+    <span><i style="background:var(--endpoint)"></i>엔드포인트</span>
+    <span><i style="background:var(--engine)"></i>엔진</span>
+    <span><i style="background:var(--data)"></i>데이터</span>
+    <span><i style="background:var(--external)"></i>외부</span>
+    <span><i style="background:var(--job)"></i>백그라운드</span>
+  </div>
+  <footer class="pm-foot">
+    재생성: <code>/project-map</code> · 이 파일은 자립형이며 프로젝트에 함께 커밋된다(Project_Manager가 조회).
+  </footer>
+</div>
+</body>
+</html>
