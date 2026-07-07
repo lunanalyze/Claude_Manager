@@ -1,5 +1,7 @@
 import "./globals.css";
 import { getSidebarGroups } from "@/lib/content";
+import { resolvedSelections } from "@/lib/ui-standard";
+import { standardStyle, bodyClass, bodyData } from "@/lib/standard-tokens";
 import ThemeToggle from "./ThemeToggle";
 
 export const metadata = {
@@ -15,12 +17,15 @@ const THEME_INIT = `(function(){try{var t=localStorage.getItem('cm-theme');if(t=
 
 export default function RootLayout({ children }) {
   const groups = getSidebarGroups();
+  const sel = resolvedSelections(); // 워크숍에서 고른 UI 표준
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+        {/* 선택된 표준(테마·반경)을 대시보드 토큰으로 주입 */}
+        <style dangerouslySetInnerHTML={{ __html: standardStyle(sel) }} />
       </head>
-      <body>
+      <body className={bodyClass(sel)} {...bodyData(sel)}>
         <div className="layout">
           <nav className="sidebar">
             <h1><a href="/">Claude_Manager</a></h1>

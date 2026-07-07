@@ -1,16 +1,18 @@
 :root {
-  /* 라이트 (기본) */
+  /* 라이트 (기본) — 강조색·반경은 워크숍 선택(주입된 --std-*)에서 파생, 없으면 폴백 */
   --bg: #f6f7f9;
   --panel: #ffffff;
   --border: #e4e7ee;
   --text: #1f2733;
   --muted: #667085;
-  --accent: #2563eb;
+  --accent: var(--std-accent-light, #2563eb);
   --accent-fg: #ffffff;
   --code-bg: #f1f3f7;
   --hover: #eef1f6;
   --card-hover: #f0f3f9;
   --active-bg: #e5edff;
+  --active-bg: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  --radius: var(--std-radius, 0.5rem);
 }
 
 /* 다크 — 명시 선택(data-theme) */
@@ -20,12 +22,13 @@
   --border: #262b36;
   --text: #d7dce4;
   --muted: #8a93a3;
-  --accent: #6ea8fe;
+  --accent: var(--std-accent-dark, #6ea8fe);
   --accent-fg: #0b1220;
   --code-bg: #11141a;
   --hover: #1d2230;
   --card-hover: #1a1f2b;
   --active-bg: #223345;
+  --active-bg: color-mix(in srgb, var(--accent) 22%, var(--panel));
 }
 
 /* 저장된 선택이 없으면 시스템 설정을 따른다 */
@@ -36,12 +39,13 @@
     --border: #262b36;
     --text: #d7dce4;
     --muted: #8a93a3;
-    --accent: #6ea8fe;
+    --accent: var(--std-accent-dark, #6ea8fe);
     --accent-fg: #0b1220;
     --code-bg: #11141a;
     --hover: #1d2230;
     --card-hover: #1a1f2b;
     --active-bg: #223345;
+    --active-bg: color-mix(in srgb, var(--accent) 22%, var(--panel));
   }
 }
 
@@ -81,7 +85,7 @@ a:hover { text-decoration: underline; }
 .theme-toggle {
   display: inline-flex; align-items: center; gap: 6px;
   margin: 0 0 16px; padding: 5px 10px; font-size: 12.5px;
-  border: 1px solid var(--border); border-radius: 7px;
+  border: 1px solid var(--border); border-radius: var(--radius);
   background: var(--panel); color: var(--text); cursor: pointer;
   transition: border-color .15s, color .15s, background .15s;
   min-height: 30px; min-width: 92px;
@@ -100,7 +104,7 @@ a:hover { text-decoration: underline; }
 .sidebar li a {
   display: block;
   padding: 5px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--text);
   font-size: 13.5px;
   white-space: nowrap;
@@ -125,14 +129,14 @@ a:hover { text-decoration: underline; }
 .md code {
   background: var(--code-bg);
   padding: .12em .4em;
-  border-radius: 4px;
+  border-radius: calc(var(--radius) - 2px);
   font-size: .88em;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 .md pre {
   background: var(--code-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: calc(var(--radius) + 2px);
   padding: 14px 16px;
   overflow-x: auto;
 }
@@ -147,7 +151,7 @@ a:hover { text-decoration: underline; }
 .md th, .md td { border: 1px solid var(--border); padding: 6px 10px; }
 .md details {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: calc(var(--radius) + 2px);
   padding: 8px 12px;
   margin: 10px 0;
   background: var(--code-bg);
@@ -174,7 +178,7 @@ a:hover { text-decoration: underline; }
 .ct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
 
 .ct-card {
-  display: block; border: 1px solid var(--border); border-radius: 10px;
+  display: block; border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px);
   background: var(--panel); padding: 14px 15px; color: var(--text);
   transition: border-color .15s, transform .1s, background .15s;
 }
@@ -186,12 +190,12 @@ a.ct-card:hover { text-decoration: none; border-color: var(--accent); background
 .ct-title { font-weight: 600; font-size: 14.5px; flex: 1 1 auto; }
 .ct-badge { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
 .b-git { background: rgba(80,200,120,.14); color: #6ed69a; }
-.b-env { background: rgba(110,168,254,.15); color: var(--accent); }
+.b-env { background: rgba(110,168,254,.15); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
 .b-gen { background: rgba(138,147,163,.15); color: var(--muted); }
 
 .ct-desc { color: var(--muted); font-size: 12.8px; line-height: 1.55; margin: 0 0 11px; }
 .ct-foot { display: flex; flex-direction: column; gap: 5px; }
-.ct-path { font-size: 11px; color: var(--muted); background: var(--code-bg); padding: 3px 7px; border-radius: 5px;
+.ct-path { font-size: 11px; color: var(--muted); background: var(--code-bg); padding: 3px 7px; border-radius: var(--radius);
   font-family: ui-monospace, Menlo, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ct-status { font-size: 11.5px; color: var(--muted); }
 .ct-status.on { color: #7fae72; }
@@ -201,15 +205,15 @@ a.ct-card:hover { text-decoration: none; border-color: var(--accent); background
 .crumb .sep { color: var(--border); }
 .space-note {
   border: 1px solid var(--border); border-left: 3px solid var(--accent);
-  border-radius: 8px; background: var(--panel); padding: 12px 15px; margin: 4px 0 22px;
+  border-radius: calc(var(--radius) + 2px); background: var(--panel); padding: 12px 15px; margin: 4px 0 22px;
 }
 .space-note .sn-title { font-weight: 600; margin-bottom: 3px; }
 .space-note p { margin: 0; color: var(--muted); font-size: 13px; }
 
 .dv-title { font-size: 1.4rem; margin: 0 0 16px; }
 .dv-count { color: var(--muted); font-size: .8rem; font-weight: 400; }
-.dv-empty { color: var(--muted); padding: 22px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; }
-.dv-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.dv-empty { color: var(--muted); padding: 22px; text-align: center; border: 1px dashed var(--border); border-radius: calc(var(--radius) + 2px); }
+.dv-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: calc(var(--radius) + 2px); overflow: hidden; }
 .dv-list li + li { border-top: 1px solid var(--border); }
 .dv-list a { display: flex; align-items: center; gap: 10px; padding: 9px 14px; color: var(--text); }
 .dv-list a:hover { background: var(--card-hover); text-decoration: none; }
@@ -218,3 +222,32 @@ a.ct-card:hover { text-decoration: none; border-color: var(--accent); background
 .dv-sub { color: var(--muted); font-size: 12px; }
 .dv-meta { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
 .dv-off { display: flex; align-items: center; gap: 10px; padding: 9px 14px; opacity: .45; }
+
+/* ══ 표준 UI 적용 (selections.json 파생) ═══════════════════
+   테마·반경은 위 토큰(--accent/--radius)으로 이미 반영됨.
+   아래는 밀도(density)·카드(card)·사이드바(sidebarnav) 변형을
+   대시보드 컴포넌트에 매핑한다. body의 class/data-*로 주입된다. */
+
+/* 밀도 */
+body.dense-compact .content { padding: 26px 34px; }
+body.dense-compact .sidebar { padding: 14px 12px; }
+body.dense-compact .ct-card { padding: 11px 13px; }
+body.dense-compact .ct-grid { gap: 10px; }
+body.dense-compact .dv-list a { padding: 7px 12px; }
+body.dense-comfortable .content { padding: 46px 60px; }
+body.dense-comfortable .ct-card { padding: 18px 20px; }
+body.dense-comfortable .ct-grid { gap: 18px; }
+body.dense-comfortable .dv-list a { padding: 12px 16px; }
+
+/* 카드 변형 → 관제탑 카드 */
+[data-std-card="elevated"] .ct-card { box-shadow: 0 6px 18px -8px rgb(15 23 42 / .22); }
+[data-std-card="filled"] .ct-card { background: var(--hover); border-color: transparent; }
+[data-std-card="accent"] .ct-card { border-top: 3px solid var(--accent); }
+[data-std-card="gradient"] .ct-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--panel)), var(--panel) 60%); }
+
+/* 사이드바 항목 변형 → 활성 항목 */
+[data-std-sidenav="filled"] .sidebar li a.active { background: var(--accent); color: var(--accent-fg); }
+[data-std-sidenav="ghost"] .sidebar li a.active { background: transparent; color: var(--accent); font-weight: 600; }
+[data-std-sidenav="bordered"] .sidebar li a.active {
+  background: var(--active-bg); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
