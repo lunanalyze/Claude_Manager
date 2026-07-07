@@ -1,0 +1,331 @@
+<!doctype html>
+<!-- project-map — 자립형 아키텍처 시각화. /project-map 으로 재생성. -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude_Manager · 프로젝트 맵</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --border:#e4e7ee; --text:#1f2733; --muted:#667085; --code:#f1f3f7;
+    --entry:#2563eb; --endpoint:#7c3aed; --engine:#0d9488; --data:#d97706; --external:#e11d48; --job:#475569;
+    --radius:.5rem;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0f1115; --panel:#161a22; --border:#262b36; --text:#d7dce4; --muted:#8a93a3; --code:#11141a;
+    --entry:#60a5fa; --endpoint:#a78bfa; --engine:#2dd4bf; --data:#fbbf24; --external:#fb7185; --job:#94a3b8;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;line-height:1.6}
+  .pm{max-width:1100px;margin:0 auto;padding:32px 24px 56px}
+  .pm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .pm-head h1{font-size:1.8rem;margin:0 0 4px}
+  .pm-sub2{color:var(--muted);font-size:13px;margin:0;max-width:640px}
+  .pm-badge{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;
+    background:color-mix(in srgb,var(--endpoint) 16%,transparent);color:var(--endpoint);white-space:nowrap}
+
+  .pm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 8px}
+  .pm-stat{border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);background:var(--panel);padding:13px 15px}
+  .pm-stat b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .pm-stat span{font-size:12px;color:var(--muted)}
+
+  .pm-flow{display:flex;flex-direction:column;margin-top:14px}
+  .pm-layer{border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);background:var(--panel);
+    padding:14px 16px;border-left:4px solid var(--lc,var(--muted))}
+  .pm-layer[data-layer=entry]{--lc:var(--entry)}
+  .pm-layer[data-layer=endpoint]{--lc:var(--endpoint)}
+  .pm-layer[data-layer=engine]{--lc:var(--engine)}
+  .pm-layer[data-layer=data]{--lc:var(--data)}
+  .pm-layer[data-layer=external]{--lc:var(--external)}
+  .pm-layer[data-layer=job]{--lc:var(--job)}
+  .pm-layer-label{font-weight:700;font-size:13px;margin-bottom:11px;color:var(--lc,var(--text));
+    display:flex;align-items:baseline;gap:8px}
+  .pm-layer-label em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .pm-layer-label .n{margin-left:auto;font-weight:600;font-size:11px;color:var(--muted)}
+  .pm-nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .pm-node{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);padding:11px 13px}
+  .pm-title{font-weight:600;font-size:13.5px}
+  .pm-sub{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--muted);
+    margin:3px 0;word-break:break-all}
+  .pm-desc{font-size:12.5px;color:var(--muted)}
+
+  .pm-conn{align-self:center;width:2px;height:20px;background:var(--border)}
+  .pm-conn::after{content:"▼";display:block;text-align:center;color:var(--border);font-size:10px;margin-top:16px}
+
+  .pm-aux{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  @media(max-width:760px){.pm-aux{grid-template-columns:1fr}.pm-stats{grid-template-columns:repeat(2,1fr)}}
+
+  .pm-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:24px;font-size:12px;color:var(--muted)}
+  .pm-legend span{display:inline-flex;align-items:center;gap:6px}
+  .pm-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .pm-foot{margin-top:20px;font-size:12px;color:var(--muted)}
+  .pm-foot code{background:var(--code);padding:2px 6px;border-radius:5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="pm">
+  <header class="pm-head">
+    <div>
+      <h1>Claude_Manager</h1>
+      <p class="pm-sub2">Claude 설정·표준·세션 로그를 모으는 관리 허브. WSL 전용 읽기 대시보드(Next.js 15 · React 19)와, Claude Code 동작을 확장하는 Skills·문서 계층으로 이루어진다. · 스캔 2026-07-07 17:13</p>
+    </div>
+    <div class="pm-badge">동작 구조 맵</div>
+  </header>
+
+  <div class="pm-stats">
+    <div class="pm-stat"><b>60</b><span>스캔한 파일</span></div>
+    <div class="pm-stat"><b>7 + 1</b><span>페이지 · API</span></div>
+    <div class="pm-stat"><b>10</b><span>엔진(핵심 모듈)</span></div>
+    <div class="pm-stat"><b>4</b><span>Skills</span></div>
+  </div>
+
+  <div class="pm-flow">
+    <!-- 진입점 -->
+    <section class="pm-layer" data-layer="entry">
+      <div class="pm-layer-label">진입점 <em>Entry</em><span class="n">2</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">대시보드 루트 레이아웃</div>
+          <div class="pm-sub">webui/app/layout.jsx</div>
+          <div class="pm-desc">사이드바·테마·선택된 UI 표준 토큰을 모든 페이지에 주입하는 최상위 셸.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">개발 서버</div>
+          <div class="pm-sub">webui/package.json · next dev</div>
+          <div class="pm-desc">WSL에서만 실행하는 읽기 전용 대시보드 기동.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <!-- 엔드포인트 -->
+    <section class="pm-layer" data-layer="endpoint">
+      <div class="pm-layer-label">엔드포인트 (페이지·API) <em>Endpoints</em><span class="n">8</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">관제탑 홈</div>
+          <div class="pm-sub">/ · app/page.jsx</div>
+          <div class="pm-desc">제어 가능한 파일 공간 전체를 카드로 조망하는 첫 화면.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">개발 생태계</div>
+          <div class="pm-sub">/ecosystem · app/ecosystem/page.jsx</div>
+          <div class="pm-desc">git 원격·양 환경·공유 콘텐츠 구성을 실시간으로 시각화.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">파일 브라우저</div>
+          <div class="pm-sub">/browse/[...parts]</div>
+          <div class="pm-desc">repo·WSL·Windows 루트의 폴더·문서를 안전하게 열람.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">UI 표준 워크숍</div>
+          <div class="pm-sub">/ui-standard · Workshop.jsx</div>
+          <div class="pm-desc">66개 UI 요소의 후보를 더미 데이터로 비교·확정.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">UI 쇼케이스</div>
+          <div class="pm-sub">/ui-standard/showcase</div>
+          <div class="pm-desc">확정된 표준을 실제 화면 장면에 배치해 확인.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">표준 선택 API</div>
+          <div class="pm-sub">GET·POST /api/ui-standard</div>
+          <div class="pm-desc">요소별 선택 상태를 조회하고 저장(단일 원본에 반영).</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">문서 뷰 (레거시)</div>
+          <div class="pm-sub">/view/[...slug]</div>
+          <div class="pm-desc">마크다운 렌더 — 현재 파일 브라우저로 대체됨.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">UI 프리뷰 (레거시)</div>
+          <div class="pm-sub">/ui-preview</div>
+          <div class="pm-desc">워크숍 이전의 정적 차트 프리뷰.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <!-- 엔진 -->
+    <section class="pm-layer" data-layer="engine">
+      <div class="pm-layer-label">엔진 (핵심 로직) <em>Engines</em><span class="n">10</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">파일 카탈로그 · 보안 가드</div>
+          <div class="pm-sub">webui/lib/catalog.js</div>
+          <div class="pm-desc">열람 공간 정의, 경로 이탈·민감파일 차단, 디렉터리 목록·파일 읽기.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">표준 선택 저장소</div>
+          <div class="pm-sub">webui/lib/ui-standard.js</div>
+          <div class="pm-desc">selections.json 읽기·유효성 검증·비파괴 병합 저장.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">UI 요소 카탈로그</div>
+          <div class="pm-sub">webui/lib/ui-elements.js</div>
+          <div class="pm-desc">66개 요소와 후보 정의(순수 모듈, 클라이언트 공용).</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">표준 토큰 파생</div>
+          <div class="pm-sub">webui/lib/standard-tokens.js</div>
+          <div class="pm-desc">선택된 테마·반경·밀도를 대시보드 CSS 토큰으로 변환.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">생태계 스캐너</div>
+          <div class="pm-sub">webui/lib/ecosystem.js</div>
+          <div class="pm-desc">git 상태·양 환경 clone·skills 설치 현황을 실측 수집.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">문서 인덱스</div>
+          <div class="pm-sub">webui/lib/content.js</div>
+          <div class="pm-desc">docs 순회, 문서 제목 추출, slug↔경로 해석.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">데모 · 차트 룩앤필 엔진</div>
+          <div class="pm-sub">app/ui-standard/demos.jsx</div>
+          <div class="pm-desc">요소별 데모 + 차트 스타일 엔진 + 요소→렌더 레지스트리.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">워크숍 상호작용</div>
+          <div class="pm-sub">app/ui-standard/Workshop.jsx</div>
+          <div class="pm-desc">후보 선택을 낙관적 업데이트 + API 저장으로 반영.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">세션 로그 파서</div>
+          <div class="pm-sub">skills/transcript-to-md/transcript_to_md.py</div>
+          <div class="pm-desc">세션 JSONL을 사람이 읽기 쉬운 마크다운으로 변환.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">표본 데이터</div>
+          <div class="pm-sub">webui/lib/ui-dummy.js</div>
+          <div class="pm-desc">워크숍·쇼케이스가 쓰는 가상 대시보드 더미 데이터.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <!-- 데이터 -->
+    <section class="pm-layer" data-layer="data">
+      <div class="pm-layer-label">데이터 · 저장 <em>Data</em><span class="n">6</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">UI 표준 원본</div>
+          <div class="pm-sub">docs/standards/ui/selections.json</div>
+          <div class="pm-desc">워크숍에서 고른 룩앤필의 단일 원본(대시보드가 이걸 따름).</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">공유 표준 문서</div>
+          <div class="pm-sub">docs/standards/</div>
+          <div class="pm-desc">기술 스택·UI 규칙 — 각 환경 CLAUDE.md가 @import.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">참고자료</div>
+          <div class="pm-sub">docs/references/</div>
+          <div class="pm-desc">구현 참고 문서 모음(무거운 자료는 링크로).</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">이슈 로그</div>
+          <div class="pm-sub">docs/issues/</div>
+          <div class="pm-desc">실패·검증 사례를 한 건당 한 파일로 누적(재활용).</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">세션 로그 (생성물)</div>
+          <div class="pm-sub">local/transcripts/ · git 미포함</div>
+          <div class="pm-desc">변환된 대화 기록 — 환경 로컬, 동기화 제외.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">환경 파일시스템</div>
+          <div class="pm-sub">~/.claude · C:\Users\JBB\.claude</div>
+          <div class="pm-desc">브라우저가 열람하는 실제 Claude 설정 공간.</div>
+        </article>
+      </div>
+    </section>
+    <div class="pm-conn"></div>
+
+    <!-- 외부 -->
+    <section class="pm-layer" data-layer="external">
+      <div class="pm-layer-label">외부 연동 <em>External</em><span class="n">3</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">GitHub 원격 (단일 원본)</div>
+          <div class="pm-sub">github.com/lunanalyze/Claude_Manager · private</div>
+          <div class="pm-desc">문서·skill의 git 단일 원본 — 양 환경이 pull로 동기화.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">Windows 환경</div>
+          <div class="pm-sub">/mnt/c/Users/JBB/.claude</div>
+          <div class="pm-desc">WSL과 별개로 관리되는 두 번째 Claude 환경.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">렌더 라이브러리</div>
+          <div class="pm-sub">recharts · react-markdown · remark/rehype</div>
+          <div class="pm-desc">차트와 마크다운 렌더링에 쓰는 외부 의존.</div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <!-- 보조: Claude 명령(Skills) / 운영·설정 -->
+  <div class="pm-aux">
+    <section class="pm-layer" data-layer="endpoint">
+      <div class="pm-layer-label">Claude 명령 (Skills) <em>Commands</em><span class="n">4</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">세션 로그 변환</div>
+          <div class="pm-sub">/transcript-to-md</div>
+          <div class="pm-desc">세션 transcript를 읽기 쉬운 md로 저장.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">이슈 로그</div>
+          <div class="pm-sub">/issue-log</div>
+          <div class="pm-desc">실패·검증 사례 기록/transcript 스윕 백필.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">참고문서 정리</div>
+          <div class="pm-sub">/reference-doc</div>
+          <div class="pm-desc">유용한 구현 패턴을 references로 정리.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">프로젝트 맵</div>
+          <div class="pm-sub">/project-map</div>
+          <div class="pm-desc">이 동작 구조 시각화를 생성(자기 자신).</div>
+        </article>
+      </div>
+    </section>
+    <section class="pm-layer" data-layer="job">
+      <div class="pm-layer-label">운영 · 설정 <em>Ops / Config</em><span class="n">3</span></div>
+      <div class="pm-nodes">
+        <article class="pm-node">
+          <div class="pm-title">환경 동기화 스크립트</div>
+          <div class="pm-sub">scripts/sync-wsl.sh · sync-windows.ps1</div>
+          <div class="pm-desc">git pull 후 skills를 각 환경에 설치(심링크/복사).</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">전역 스타일 · 토큰</div>
+          <div class="pm-sub">webui/app/globals.css</div>
+          <div class="pm-desc">대시보드 테마 토큰(라이트/다크)·컴포넌트 스타일.</div>
+        </article>
+        <article class="pm-node">
+          <div class="pm-title">빌드 설정</div>
+          <div class="pm-sub">next.config.mjs · jsconfig.json</div>
+          <div class="pm-desc">상위 repo 파일 접근 허용, @ 경로 별칭.</div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <div class="pm-legend">
+    <span><i style="background:var(--entry)"></i>진입점</span>
+    <span><i style="background:var(--endpoint)"></i>엔드포인트 · 명령</span>
+    <span><i style="background:var(--engine)"></i>엔진</span>
+    <span><i style="background:var(--data)"></i>데이터</span>
+    <span><i style="background:var(--external)"></i>외부</span>
+    <span><i style="background:var(--job)"></i>운영·설정</span>
+  </div>
+  <footer class="pm-foot">
+    재생성: <code>/project-map</code> · 이 파일은 자립형이며 프로젝트에 함께 커밋된다(Project_Manager가 조회).
+  </footer>
+</div>
+</body>
+</html>
