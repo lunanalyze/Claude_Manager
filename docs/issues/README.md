@@ -8,7 +8,9 @@ Claude Code에게 뭔가 시켰을 때 **한 번에 되지 않아 검증이 필�
   다음엔 어떻게 피하나"**의 기록이다.
 - 한 이슈 = 한 파일(`<slug>.md`). frontmatter에 `type/status/stack/tags`를 달아
   **나중에 임베딩→RAG 자동 검색**이 가능하도록 설계했다(당장은 이 색인 + `grep` 검색).
-- 새 이슈는 [`/issue-log`](../../skills/issue-log/SKILL.md) skill로 남긴다.
+- 새 이슈는 [`issue-log`](../../skills/issue-log/SKILL.md) skill로 남긴다. 두 가지 방식:
+  - **지정 기록** — `/issue-log` : 방금 짚은 사례 하나를 기록.
+  - **전체 스윕** — `/issue-log sweep` : 이 환경의 프로젝트 transcript를 훑어 발생했던 이슈를 소급 백필.
 
 ## 사용 습관 (재활용 흐름)
 
