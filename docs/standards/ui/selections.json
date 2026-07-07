@@ -63,5 +63,6 @@
   "spinner": "dots",
   "emptystate": "bordered",
   "notif": "pill",
-  "chart": "gradient"
+  "chart": "gradient",
+  "type": "compact"
 }
