@@ -538,6 +538,269 @@ export function DemoChart({ variant, colors = THEME_COLORS.blue }) {
   );
 }
 
+/* ══ 신규: 폼 추가 ═══════════════════════════════════════ */
+export function DemoIconButton({ variant }) {
+  return <div className="demo-row">{["✎", "🗑", "★"].map((i, k) => <button key={k} className={`wib ib-${variant}`}>{i}</button>)}</div>;
+}
+export function DemoButtonGroup({ variant }) {
+  if (variant === "split")
+    return <div className="wbg bg-split demo-row"><button className="wb b-solid">저장</button><button className="wb b-solid">▾</button></div>;
+  const items = ["왼쪽", "가운데", "오른쪽"];
+  return <div className={`wbg bg-${variant}`}>{items.map((t, i) => <button key={t} className={`bg-btn ${i === 0 ? "on" : ""}`}>{t}</button>)}</div>;
+}
+export function DemoSearchInput({ variant }) {
+  return (
+    <div className={`wsearch se-${variant} demo-full`}>
+      <span className="se-ico">🔍</span>
+      <input placeholder="검색…" defaultValue="주문 #10245" />
+      <span className="se-clear">✕</span>
+    </div>
+  );
+}
+export function DemoFileDrop({ variant }) {
+  return (
+    <div className={`wdrop drop-${variant} demo-full`}>
+      <div className="drop-ico">⬆</div>
+      <div className="drop-t">파일을 끌어다 놓기</div>
+      <div className="drop-x">또는 클릭해 업로드 · PNG, PDF</div>
+    </div>
+  );
+}
+
+/* ══ 신규: 데이터 표시 ═══════════════════════════════════ */
+function Spark() {
+  return (
+    <svg width="66" height="22" viewBox="0 0 66 22" preserveAspectRatio="none">
+      <polyline points="0,18 13,13 26,15 39,7 52,9 66,2" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function Ring({ pct }) {
+  const r = 16, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+  return (
+    <svg width="44" height="44" viewBox="0 0 44 44">
+      <circle cx="22" cy="22" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="5" />
+      <circle cx="22" cy="22" r={r} fill="none" stroke="hsl(var(--primary))" strokeWidth="5"
+        strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" transform="rotate(-90 22 22)" />
+      <text x="22" y="26" textAnchor="middle" fontSize="11" fontWeight="700" fill="hsl(var(--foreground))">{pct}</text>
+    </svg>
+  );
+}
+export function DemoStat({ variant }) {
+  const label = "월 매출", val = "₩128.4M", delta = "+12.4%";
+  if (variant === "icon")
+    return (
+      <div className="wstat st-icon demo-full">
+        <span className="st-ic">💰</span>
+        <div><div className="st-l">{label}</div><div className="st-v">{val}</div></div>
+        <span className="st-d up">{delta}</span>
+      </div>
+    );
+  if (variant === "spark")
+    return (
+      <div className="wstat st-spark demo-full">
+        <div className="st-l">{label}</div>
+        <div className="st-row"><div className="st-v">{val}</div><Spark /></div>
+      </div>
+    );
+  if (variant === "ring")
+    return (
+      <div className="wstat st-ring demo-full">
+        <Ring pct={72} />
+        <div><div className="st-l">{label}</div><div className="st-v">{val}</div><span className="st-d up">{delta}</span></div>
+      </div>
+    );
+  return (
+    <div className="wstat st-plain demo-full">
+      <div className="st-l">{label}</div><div className="st-v">{val}</div><span className="st-d up">{delta}</span>
+    </div>
+  );
+}
+export function DemoList({ variant }) {
+  const rows = [["프로필 설정", "계정 정보 관리"], ["결제 수단", "카드 · 계좌"], ["알림", "이메일 · 푸시"]];
+  return (
+    <div className={`wlist list-${variant} demo-full`}>
+      {rows.map(([t, s]) => (
+        <div className="li" key={t}><div><div className="li-t">{t}</div><div className="li-s">{s}</div></div><span className="li-ch">›</span></div>
+      ))}
+    </div>
+  );
+}
+export function DemoDescList({ variant }) {
+  const rows = [["플랜", "Pro"], ["상태", "활성"], ["다음 결제", "2026-08-01"]];
+  return (
+    <div className={`wdl dl-${variant} demo-full`}>
+      {rows.map(([k, v]) => <div className="dl-row" key={k}><span className="dl-k">{k}</span><span className="dl-v">{v}</span></div>)}
+    </div>
+  );
+}
+export function DemoTag({ variant }) {
+  return (
+    <div className={`wtags tag-${variant} demo-row`}>
+      {["디자인", "프론트엔드", "긴급"].map((t) => <span key={t} className="tg">{t}<span className="tg-x">✕</span></span>)}
+    </div>
+  );
+}
+export function DemoAvatarGroup({ variant }) {
+  const people = [["김", "hsl(221 83% 55%)"], ["이", "hsl(160 70% 40%)"], ["박", "hsl(32 90% 50%)"], ["최", "hsl(291 60% 55%)"]];
+  return (
+    <div className={`wavg avg-${variant} demo-full`}>
+      {people.map(([i, bg], k) => <span key={k} className="av" style={{ background: bg }}>{i}</span>)}
+      {variant === "count" && <span className="av more">+5</span>}
+    </div>
+  );
+}
+export function DemoRating({ variant }) {
+  if (variant === "score")
+    return <div className="wrate demo-row"><span className="rt-score">4.5</span><span className="rt-stars">★★★★☆</span><span className="rt-count">(128)</span></div>;
+  const [full, empty] = variant === "hearts" ? ["♥", "♡"] : ["★", "☆"];
+  return <div className={`wrate rate-${variant} demo-row`}>{[1, 1, 1, 1, 0].map((f, i) => <span key={i} className={`rt ${f ? "on" : ""}`}>{f ? full : empty}</span>)}</div>;
+}
+export function DemoKbd({ variant }) {
+  return (
+    <div className={`wkbd kbd-${variant} demo-row`}>
+      <kbd>⌘</kbd><kbd>K</kbd><span className="kbd-txt">검색 열기</span>
+    </div>
+  );
+}
+export function DemoCode({ variant }) {
+  return (
+    <div className={`wcode code-${variant} demo-full`}>
+      <div className="code-bar"><span className="cd-dot" /><span className="cd-dot" /><span className="cd-dot" /></div>
+      <pre><span className="tk-k">const</span> total = orders.<span className="tk-f">reduce</span>((a, o) =&gt; a + o.amount, <span className="tk-n">0</span>);</pre>
+    </div>
+  );
+}
+const TREE = [[0, "📁", "app"], [1, "📁", "components"], [2, "📄", "button.tsx"], [2, "📄", "card.tsx", true], [1, "📄", "page.tsx"]];
+export function DemoTree({ variant }) {
+  return (
+    <div className={`wtree tree-${variant} demo-full`}>
+      {TREE.map(([lvl, ic, name, on], i) => (
+        <div key={i} className={`tr-row lvl${lvl} ${on ? "on" : ""}`}><span className="tr-ic">{ic}</span>{name}</div>
+      ))}
+    </div>
+  );
+}
+export function DemoTimeline({ variant }) {
+  const items = [["주문 생성", "09:24"], ["결제 완료", "09:26"], ["배송 시작", "11:02"]];
+  return (
+    <div className={`wtl tl-${variant} demo-full`}>
+      {items.map(([t, tm], i, arr) => (
+        <div className="tl-item" key={t}>
+          <div className="tl-marker"><span className="tl-dot" />{i < arr.length - 1 && <span className="tl-line" />}</div>
+          <div className="tl-body"><div className="tl-t">{t}</div><div className="tl-tm">{tm}</div></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ══ 신규: 미디어 ════════════════════════════════════════ */
+export function DemoMedia({ variant }) {
+  return (
+    <div className={`wmedia med-${variant} demo-full`}>
+      <div className="med-frame"><span className="med-ico">🖼</span>{variant === "overlay" && <div className="med-ov">제품 이미지</div>}</div>
+    </div>
+  );
+}
+export function DemoCarousel({ variant }) {
+  return (
+    <div className={`wcar car-${variant} demo-full`}>
+      <div className="car-frame"><span className="car-slide">1</span>
+        {variant === "arrows" && <><button className="car-arrow l">‹</button><button className="car-arrow r">›</button></>}
+      </div>
+      {variant === "dots" && <div className="car-dots"><span className="on" /><span /><span /></div>}
+      {variant === "thumbs" && <div className="car-thumbs"><span className="on">1</span><span>2</span><span>3</span></div>}
+    </div>
+  );
+}
+
+/* ══ 신규: 내비게이션 ════════════════════════════════════ */
+export function DemoSteps({ variant }) {
+  const steps = ["장바구니", "배송", "결제", "완료"], cur = 2;
+  return (
+    <div className={`wsteps step-${variant} demo-full`}>
+      {steps.map((s, i, arr) => (
+        <div key={s} className={`stp ${i < cur ? "done" : i === cur ? "cur" : ""}`}>
+          <span className="stp-n">{variant === "dots" ? "" : i < cur ? "✓" : i + 1}</span>
+          <span className="stp-l">{s}</span>
+          {i < arr.length - 1 && <span className="stp-line" />}
+        </div>
+      ))}
+    </div>
+  );
+}
+export function DemoToolbar({ variant }) {
+  return (
+    <div className={`wtb tb-${variant} demo-full`}>
+      <button className="tb-b on">B</button><button className="tb-b">I</button><button className="tb-b">U</button>
+      <span className="tb-sep" /><button className="tb-b">≡</button><button className="tb-b">⋯</button>
+      <span style={{ flex: 1 }} /><button className="tb-b">↗</button>
+    </div>
+  );
+}
+export function DemoCollapsible({ variant }) {
+  return (
+    <div className={`wcol col-${variant} demo-full`}>
+      <div className="col-head"><span>고급 설정</span><span className="col-ic">{variant === "plus" ? "−" : "▾"}</span></div>
+      <div className="col-body">API 키, 웹훅, 데이터 내보내기 옵션을 포함합니다.</div>
+    </div>
+  );
+}
+
+/* ══ 신규: 오버레이 · 피드백 ═════════════════════════════ */
+export function DemoBanner({ variant }) {
+  return (
+    <div className={`wbanner ban-${variant} demo-full`}>
+      <span className="ban-ic">🎉</span>
+      <span className="ban-t">새 대시보드가 출시되었습니다.</span>
+      <button className="ban-cta">자세히 →</button><span className="ban-x">✕</span>
+    </div>
+  );
+}
+export function DemoSpinner({ variant }) {
+  if (variant === "dots") return <div className="wspin spin-dots demo-row"><span className="sp-dot" /><span className="sp-dot" /><span className="sp-dot" /></div>;
+  if (variant === "bars") return <div className="wspin spin-bars demo-row"><span className="sp-bar" /><span className="sp-bar" /><span className="sp-bar" /><span className="sp-bar" /></div>;
+  return <div className="wspin spin-ring demo-row"><span className="sp-ring" /></div>;
+}
+export function DemoEmpty({ variant }) {
+  return (
+    <div className={`wempty empty-${variant} demo-full`}>
+      <div className="em-ic">📭</div>
+      <div className="em-t">주문이 없습니다</div>
+      <div className="em-x">첫 주문을 생성해 시작하세요.</div>
+      <button className="wb b-solid sm">＋ 새 주문</button>
+    </div>
+  );
+}
+function ProgRing({ pct, variant }) {
+  const r = 20, c = 2 * Math.PI * r, off = c * (1 - pct / 100), gid = `prg-${variant}-${pct}`;
+  const stroke = variant === "gradient" ? `url(#${gid})` : "hsl(var(--primary))";
+  return (
+    <svg width="58" height="58" viewBox="0 0 58 58">
+      <defs><linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--chart-1))" /><stop offset="100%" stopColor="hsl(var(--chart-2))" />
+      </linearGradient></defs>
+      <circle cx="29" cy="29" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="6" strokeDasharray={variant === "dashed" ? "3 4" : undefined} />
+      <circle cx="29" cy="29" r={r} fill="none" stroke={stroke} strokeWidth="6" strokeLinecap="round"
+        strokeDasharray={c} strokeDashoffset={off} transform="rotate(-90 29 29)" />
+      <text x="29" y="33" textAnchor="middle" fontSize="13" fontWeight="700" fill="hsl(var(--foreground))">{pct}%</text>
+    </svg>
+  );
+}
+export function DemoProgressRing({ variant }) {
+  return <div className="demo-row" style={{ gap: 20 }}><ProgRing pct={72} variant={variant} /><ProgRing pct={40} variant={variant} /></div>;
+}
+export function DemoNotif({ variant }) {
+  const txt = variant === "dot" ? ["", ""] : variant === "count" ? ["3", "12"] : ["9+", "99+"];
+  return (
+    <div className={`wnotif notif-${variant} demo-row`} style={{ gap: 26 }}>
+      <span className="nf-anchor">🔔<span className="nf-badge">{txt[0]}</span></span>
+      <span className="nf-anchor">✉<span className="nf-badge">{txt[1]}</span></span>
+    </div>
+  );
+}
+
 /* ══ 기초 샘플 ═══════════════════════════════════════════ */
 const THEME_SWATCH = {
   blue:    ["hsl(221 83% 53%)", "hsl(262 83% 63%)", "hsl(199 89% 48%)"],
@@ -596,42 +859,66 @@ export const DEMO = {
   type:       (v) => <TypeSample type={v} />,
   radius:     (v) => <RadiusSample variant={v} />,
   density:    (v) => <DensitySample variant={v} />,
-  button:     (v) => <DemoButton variant={v} />,
-  input:      (v) => <DemoInput variant={v} />,
-  textarea:   (v) => <DemoTextarea variant={v} />,
-  select:     (v) => <DemoSelect variant={v} />,
-  combobox:   (v) => <DemoCombobox variant={v} />,
-  checkbox:   (v) => <DemoCheckbox variant={v} />,
-  radio:      (v) => <DemoRadio variant={v} />,
-  switch:     (v) => <DemoSwitch variant={v} />,
-  slider:     (v) => <DemoSlider variant={v} />,
-  toggle:     (v) => <DemoToggle variant={v} />,
-  otp:        (v) => <DemoOtp variant={v} />,
-  datefield:  (v) => <DemoDateField variant={v} />,
-  field:      (v) => <DemoField variant={v} />,
-  card:       (v) => <DemoCard variant={v} />,
-  table:      (v) => <DemoTable variant={v} rows={ORDERS.slice(0, 3)} />,
-  badge:      (v) => <DemoBadge variant={v} />,
-  avatar:     (v) => <DemoAvatar variant={v} />,
-  accordion:  (v) => <DemoAccordion variant={v} />,
-  skeleton:   (v) => <DemoSkeleton variant={v} />,
-  tooltip:    (v) => <DemoTooltip variant={v} />,
-  hovercard:  (v) => <DemoHoverCard variant={v} />,
-  separator:  (v) => <DemoSeparator variant={v} />,
-  tabs:       (v) => <DemoTabs variant={v} />,
-  breadcrumb: (v) => <DemoBreadcrumb variant={v} />,
-  pagination: (v) => <DemoPagination variant={v} />,
-  navmenu:    (v) => <DemoNavMenu variant={v} />,
-  menubar:    (v) => <DemoMenubar variant={v} />,
-  dropdown:   (v) => <DemoDropdown variant={v} />,
-  command:    (v) => <DemoCommand variant={v} />,
-  sidebarnav: (v) => <DemoSidebarNav variant={v} />,
-  dialog:     (v) => <DemoDialog variant={v} />,
-  alertdialog:(v) => <DemoAlertDialog variant={v} />,
-  sheet:      (v) => <DemoSheet variant={v} />,
-  popover:    (v) => <DemoPopover variant={v} />,
-  toast:      (v) => <DemoToast variant={v} />,
-  alert:      (v) => <DemoAlert variant={v} />,
-  progress:   (v) => <DemoProgress variant={v} />,
-  chart:      (v) => <DemoChart variant={v} />,
+  button:      (v) => <DemoButton variant={v} />,
+  iconbutton:  (v) => <DemoIconButton variant={v} />,
+  buttongroup: (v) => <DemoButtonGroup variant={v} />,
+  input:       (v) => <DemoInput variant={v} />,
+  searchinput: (v) => <DemoSearchInput variant={v} />,
+  textarea:    (v) => <DemoTextarea variant={v} />,
+  select:      (v) => <DemoSelect variant={v} />,
+  combobox:    (v) => <DemoCombobox variant={v} />,
+  checkbox:    (v) => <DemoCheckbox variant={v} />,
+  radio:       (v) => <DemoRadio variant={v} />,
+  switch:      (v) => <DemoSwitch variant={v} />,
+  slider:      (v) => <DemoSlider variant={v} />,
+  toggle:      (v) => <DemoToggle variant={v} />,
+  otp:         (v) => <DemoOtp variant={v} />,
+  datefield:   (v) => <DemoDateField variant={v} />,
+  filedrop:    (v) => <DemoFileDrop variant={v} />,
+  field:       (v) => <DemoField variant={v} />,
+  card:        (v) => <DemoCard variant={v} />,
+  stat:        (v) => <DemoStat variant={v} />,
+  table:       (v) => <DemoTable variant={v} rows={ORDERS.slice(0, 3)} />,
+  list:        (v) => <DemoList variant={v} />,
+  desclist:    (v) => <DemoDescList variant={v} />,
+  badge:       (v) => <DemoBadge variant={v} />,
+  tag:         (v) => <DemoTag variant={v} />,
+  avatar:      (v) => <DemoAvatar variant={v} />,
+  avatargroup: (v) => <DemoAvatarGroup variant={v} />,
+  rating:      (v) => <DemoRating variant={v} />,
+  kbd:         (v) => <DemoKbd variant={v} />,
+  code:        (v) => <DemoCode variant={v} />,
+  tree:        (v) => <DemoTree variant={v} />,
+  accordion:   (v) => <DemoAccordion variant={v} />,
+  skeleton:    (v) => <DemoSkeleton variant={v} />,
+  tooltip:     (v) => <DemoTooltip variant={v} />,
+  hovercard:   (v) => <DemoHoverCard variant={v} />,
+  separator:   (v) => <DemoSeparator variant={v} />,
+  timeline:    (v) => <DemoTimeline variant={v} />,
+  media:       (v) => <DemoMedia variant={v} />,
+  carousel:    (v) => <DemoCarousel variant={v} />,
+  tabs:        (v) => <DemoTabs variant={v} />,
+  steps:       (v) => <DemoSteps variant={v} />,
+  breadcrumb:  (v) => <DemoBreadcrumb variant={v} />,
+  pagination:  (v) => <DemoPagination variant={v} />,
+  navmenu:     (v) => <DemoNavMenu variant={v} />,
+  menubar:     (v) => <DemoMenubar variant={v} />,
+  toolbar:     (v) => <DemoToolbar variant={v} />,
+  dropdown:    (v) => <DemoDropdown variant={v} />,
+  command:     (v) => <DemoCommand variant={v} />,
+  collapsible: (v) => <DemoCollapsible variant={v} />,
+  sidebarnav:  (v) => <DemoSidebarNav variant={v} />,
+  dialog:      (v) => <DemoDialog variant={v} />,
+  alertdialog: (v) => <DemoAlertDialog variant={v} />,
+  sheet:       (v) => <DemoSheet variant={v} />,
+  popover:     (v) => <DemoPopover variant={v} />,
+  toast:       (v) => <DemoToast variant={v} />,
+  banner:      (v) => <DemoBanner variant={v} />,
+  alert:       (v) => <DemoAlert variant={v} />,
+  progress:    (v) => <DemoProgress variant={v} />,
+  progressring:(v) => <DemoProgressRing variant={v} />,
+  spinner:     (v) => <DemoSpinner variant={v} />,
+  emptystate:  (v) => <DemoEmpty variant={v} />,
+  notif:       (v) => <DemoNotif variant={v} />,
+  chart:       (v) => <DemoChart variant={v} />,
 };

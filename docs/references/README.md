@@ -11,4 +11,7 @@ references/
 └─ ...
 ```
 
-(작성 예정)
+## 목록
+
+- [마크다운 렌더링 함정](./markdown-rendering.md) — react-markdown/remark-gfm 렌더링
+  시 자주 겪는 문제와 대응책 (예: 물결 하나 `~x~`가 취소선 되는 문제 → `singleTilde: false`)
