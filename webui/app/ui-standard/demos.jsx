@@ -15,30 +15,167 @@ export const THEME_COLORS = {
   amber:   { c1: "hsl(32 92% 46%)",  c2: "hsl(43 96% 48%)" },
 };
 
-// ── 버튼 ──────────────────────────────
+/* ══ 폼 컨트롤 ═══════════════════════════════════════════ */
 export function DemoButton({ variant, label = "저장하기", withGhost = true }) {
   return (
     <div className="demo-row">
       <button className={`wb b-${variant}`}>{label}</button>
-      {withGhost && <button className="wb ghost">취소</button>}
+      {withGhost && variant !== "link" && <button className="wb ghost">취소</button>}
     </div>
   );
 }
 
-// ── 카드(KPI) ─────────────────────────
-export function DemoCard({ variant, kpi = KPIS[0] }) {
+export function DemoInput({ variant }) {
   return (
-    <div className={`wc card-${variant} demo-full`}>
-      <p className="kpi-l">{kpi.label}</p>
-      <div className="kpi-v">
-        {kpi.value}
-        <span className={`kpi-d ${kpi.up ? "up" : "down"}`}>{kpi.delta}</span>
+    <div className="wi-field demo-full">
+      <label>이메일</label>
+      <input className={`wi inp-${variant}`} placeholder="you@example.com" defaultValue="lunanalyze@gmail.com" />
+    </div>
+  );
+}
+
+export function DemoTextarea({ variant }) {
+  return (
+    <div className="wi-field demo-full">
+      <label>메모</label>
+      <textarea className={`wta inp-${variant}`} rows={3} defaultValue={"이번 분기 목표를 정리했습니다.\n주요 지표는 매출과 이탈률."} />
+    </div>
+  );
+}
+
+export function DemoSelect({ variant }) {
+  return (
+    <div className="wi-field demo-full">
+      <label>플랜</label>
+      <div className={`wsel sel-${variant}`} role="button" tabIndex={0}>
+        <span>Pro · 월 ₩49,000</span><span className="chev">▾</span>
       </div>
     </div>
   );
 }
 
-// ── 뱃지 ──────────────────────────────
+export function DemoCombobox({ variant }) {
+  return (
+    <div className="wi-field demo-full">
+      <label>담당자</label>
+      <div className={`wsel sel-${variant}`} role="button" tabIndex={0}>
+        <span className="cb-ico">🔍</span>
+        <span style={{ flex: "1 1 auto" }}>김민준</span><span className="chev">▾</span>
+      </div>
+    </div>
+  );
+}
+
+export function DemoCheckbox({ variant }) {
+  const rows = [["이메일 알림", true], ["주간 리포트", true], ["마케팅 수신", false]];
+  return (
+    <div className={`wcheck chk-${variant} demo-full`}>
+      {rows.map(([label, on]) => (
+        <label className={`row ${on ? "on" : ""}`} key={label}>
+          <span className="box">{on ? "✓" : ""}</span>{label}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+export function DemoRadio({ variant }) {
+  const rows = [["월간 결제", true], ["연간 결제 (2개월 무료)", false], ["평생 이용권", false]];
+  return (
+    <div className={`wradio rad-${variant} demo-full`}>
+      {rows.map(([label, on]) => (
+        <label className={`row ${on ? "on" : ""}`} key={label}>
+          <span className="dot"><span className="i" /></span>{label}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+export function DemoSwitch({ variant }) {
+  const rows = [["다크 모드", true], ["2단계 인증", false]];
+  return (
+    <div className="wswitch demo-full">
+      {rows.map(([label, on]) => (
+        <div className="row" key={label}>
+          <span className={`wtoggle sw-${variant} ${on ? "on" : ""}`}><span className="knob" /></span>{label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function DemoSlider({ variant }) {
+  return (
+    <div className={`wslider sld-${variant} demo-full`}>
+      <div className="row"><span className="lbl">예산</span>
+        <div className="track"><div className="fill" style={{ width: "62%" }} /><span className="handle" style={{ left: "62%" }} /></div>
+      </div>
+      <div className="row"><span className="lbl">알림</span>
+        <div className="track"><div className="fill" style={{ width: "30%" }} /><span className="handle" style={{ left: "30%" }} /></div>
+      </div>
+    </div>
+  );
+}
+
+export function DemoToggle({ variant }) {
+  const items = [["B", true], ["I", false], ["U", false]];
+  return (
+    <div className={`wtoggrp tgg-${variant} demo-full`}>
+      {items.map(([t, on]) => (
+        <button key={t} className={`seg ${on ? "on" : ""}`}>{t}</button>
+      ))}
+    </div>
+  );
+}
+
+export function DemoOtp({ variant }) {
+  const vals = ["4", "8", "2", "", "", ""];
+  return (
+    <div className={`wotp otp-${variant} demo-full`}>
+      {vals.map((v, i) => (
+        <div key={i} className={`cell ${i === 3 ? "active" : ""}`}>{v}</div>
+      ))}
+    </div>
+  );
+}
+
+export function DemoDateField({ variant }) {
+  return (
+    <div className="wi-field demo-full">
+      <label>결제일</label>
+      <div className={`wsel sel-${variant}`} role="button" tabIndex={0}>
+        <span className="cb-ico">📅</span>
+        <span style={{ flex: "1 1 auto" }}>2026-07-07</span><span className="chev">▾</span>
+      </div>
+    </div>
+  );
+}
+
+export function DemoField({ variant }) {
+  return (
+    <div className={`wfield fld-${variant} demo-full`}>
+      <div className="fld-line">
+        <label>표시 이름</label>
+        <div className="fld-input">
+          <input className="wi inp-outline" defaultValue="루나" placeholder="이름" />
+        </div>
+      </div>
+      <p className="fld-help">프로필과 댓글에 표시됩니다.</p>
+    </div>
+  );
+}
+
+/* ══ 데이터 표시 ═════════════════════════════════════════ */
+export function DemoCard({ variant, kpi = KPIS[0] }) {
+  return (
+    <div className={`wc card-${variant} demo-full`}>
+      <p className="kpi-l">{kpi.label}</p>
+      <div className="kpi-v">{kpi.value}<span className={`kpi-d ${kpi.up ? "up" : "down"}`}>{kpi.delta}</span></div>
+    </div>
+  );
+}
+
 export function Badge({ variant, kind, children }) {
   if (variant === "dot") {
     return <span className={`wbadge bdg-dot ${kind}`}><span className="d" />{children}</span>;
@@ -55,20 +192,15 @@ export function DemoBadge({ variant }) {
   );
 }
 
-// ── 테이블 ────────────────────────────
 export function DemoTable({ variant, badgeVariant = "soft", rows = ORDERS }) {
   return (
     <div className="demo-tblwrap">
       <table className={`wt tbl-${variant}`}>
-        <thead>
-          <tr><th>주문</th><th>고객</th><th>플랜</th><th className="num">금액</th><th>상태</th></tr>
-        </thead>
+        <thead><tr><th>주문</th><th>고객</th><th>플랜</th><th className="num">금액</th><th>상태</th></tr></thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.customer}</td>
-              <td>{r.plan}</td>
+              <td>{r.id}</td><td>{r.customer}</td><td>{r.plan}</td>
               <td className="num">{fmtWon(r.amount)}</td>
               <td><Badge variant={badgeVariant} kind={STATUS_KIND[r.status]}>{r.status}</Badge></td>
             </tr>
@@ -79,84 +211,225 @@ export function DemoTable({ variant, badgeVariant = "soft", rows = ORDERS }) {
   );
 }
 
-// ── 인풋 ──────────────────────────────
-export function DemoInput({ variant }) {
+export function DemoAvatar({ variant }) {
+  const people = [["김민", "hsl(221 83% 55%)"], ["이서", "hsl(160 70% 40%)"], ["박지", "hsl(32 90% 50%)"]];
   return (
-    <div className="wi-field demo-full">
-      <label>이메일</label>
-      <input className={`wi inp-${variant}`} placeholder="you@example.com" defaultValue="lunanalyze@gmail.com" />
+    <div className={`wav av-${variant}`}>
+      {people.map(([ini, bg]) => <span key={ini} className="av" style={{ background: bg }}>{ini}</span>)}
     </div>
   );
 }
 
-// ── 셀렉트 ────────────────────────────
-export function DemoSelect({ variant }) {
+export function DemoAccordion({ variant }) {
+  const items = [["결제 수단은 어떻게 바꾸나요?", true], ["환불 정책이 궁금해요", false], ["팀 요금제 할인", false]];
   return (
-    <div className="wi-field demo-full">
-      <label>플랜</label>
-      <div className={`wsel sel-${variant}`} role="button" tabIndex={0}>
-        <span>Pro · 월 ₩49,000</span>
-        <span className="chev">▾</span>
-      </div>
-    </div>
-  );
-}
-
-// ── 체크박스 ──────────────────────────
-export function DemoCheckbox({ variant }) {
-  const rows = [["이메일 알림", true], ["주간 리포트", true], ["마케팅 수신", false]];
-  return (
-    <div className={`wcheck chk-${variant} demo-full`}>
-      {rows.map(([label, on]) => (
-        <label className={`row ${on ? "on" : ""}`} key={label}>
-          <span className="box">{on ? "✓" : ""}</span>{label}
-        </label>
-      ))}
-    </div>
-  );
-}
-
-// ── 스위치 ────────────────────────────
-export function DemoSwitch({ variant }) {
-  const rows = [["다크 모드", true], ["2단계 인증", false]];
-  return (
-    <div className="wswitch demo-full">
-      {rows.map(([label, on]) => (
-        <div className="row" key={label}>
-          <span className={`wtoggle sw-${variant} ${on ? "on" : ""}`}><span className="knob" /></span>
-          {label}
+    <div className={`wacc acc-${variant} demo-full`}>
+      {items.map(([q, open]) => (
+        <div className={`item ${open ? "open" : ""}`} key={q}>
+          <div className="head"><span>{q}</span><span className="chev">{open ? "▾" : "›"}</span></div>
+          {open && <div className="body">설정 → 결제에서 언제든 변경할 수 있습니다.</div>}
         </div>
       ))}
     </div>
   );
 }
 
-// ── 아바타 ────────────────────────────
-export function DemoAvatar({ variant }) {
-  const people = [["김민", "hsl(221 83% 55%)"], ["이서", "hsl(160 70% 40%)"], ["박지", "hsl(32 90% 50%)"]];
+export function DemoSkeleton({ variant }) {
   return (
-    <div className={`wav av-${variant}`}>
-      {people.map(([ini, bg]) => (
-        <span key={ini} className="av" style={{ background: bg }}>{ini}</span>
+    <div className={`wskel sk-${variant} demo-full`}>
+      <div className="row"><span className="sk-av" /><div className="sk-lines"><span className="sk-l w70" /><span className="sk-l w40" /></div></div>
+      <span className="sk-l w90" /><span className="sk-l w80" />
+    </div>
+  );
+}
+
+export function DemoTooltip({ variant }) {
+  return (
+    <div className="demo-col">
+      <div className={`wtip tip-${variant}`}>업데이트: 2분 전<span className="arrow" /></div>
+      <button className="wb b-soft">호버 대상</button>
+    </div>
+  );
+}
+
+export function DemoHoverCard({ variant }) {
+  return (
+    <div className={`whcard hc-${variant} demo-full`}>
+      <div className="hc-head">
+        <span className="av" style={{ background: "hsl(221 83% 55%)" }}>루</span>
+        <div><div className="hc-name">@lunanalyze</div><div className="hc-sub">제품 디자이너</div></div>
+      </div>
+      <p className="hc-body">데이터 대시보드와 디자인 시스템을 만듭니다.</p>
+    </div>
+  );
+}
+
+export function DemoSeparator({ variant }) {
+  return (
+    <div className="demo-full" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <span className="txt">섹션 A</span>
+      {variant === "label"
+        ? <div className="wsep sep-label"><span className="line" /><span className="t">또는</span><span className="line" /></div>
+        : <div className={`wsep sep-${variant}`} />}
+      <span className="txt">섹션 B</span>
+    </div>
+  );
+}
+
+/* ══ 내비게이션 ══════════════════════════════════════════ */
+export function DemoTabs({ variant, active = 0 }) {
+  const tabs = ["개요", "주문", "설정"];
+  return (
+    <div className={`wtabs tab-${variant} demo-full`}>
+      {tabs.map((t, i) => <span key={t} className={`tab ${i === active ? "on" : ""}`}>{t}</span>)}
+    </div>
+  );
+}
+
+export function DemoBreadcrumb({ variant }) {
+  const parts = ["대시보드", "주문", "#10245"];
+  const sep = { chevron: "›", slash: "/", dot: "·" }[variant] ?? "›";
+  return (
+    <div className="wbc demo-full">
+      {parts.map((p, i) => (
+        <span key={p} className="seg">
+          <span className={i === parts.length - 1 ? "cur" : "link"}>{p}</span>
+          {i < parts.length - 1 && <span className="bsep">{sep}</span>}
+        </span>
       ))}
     </div>
   );
 }
 
-// ── 얼럿 ──────────────────────────────
-export function DemoAlert({ variant }) {
+export function DemoPagination({ variant }) {
+  if (variant === "compact")
+    return <div className="wpag demo-row"><button className="pg">←</button><span className="pg-info">3 / 12</span><button className="pg">→</button></div>;
+  if (variant === "arrows")
+    return <div className="wpag demo-row"><button className="pg wide">← 이전</button><button className="pg wide">다음 →</button></div>;
   return (
-    <div className={`walert al-${variant} demo-full`}>
-      <span className="ai">◆</span>
-      <div>
-        <p className="at">결제가 곧 만료됩니다</p>
-        <p className="ax">7일 내 갱신하지 않으면 Pro 기능이 중단됩니다.</p>
+    <div className="wpag demo-row">
+      <button className="pg">←</button>
+      {[1, 2, 3, 4].map((n) => <button key={n} className={`pg ${n === 3 ? "on" : ""}`}>{n}</button>)}
+      <button className="pg">→</button>
+    </div>
+  );
+}
+
+export function DemoNavMenu({ variant }) {
+  const items = [["대시보드", true], ["주문", false], ["고객", false], ["설정", false]];
+  return (
+    <div className={`wnav nav-${variant} demo-full`}>
+      {items.map(([t, on]) => <span key={t} className={`nv ${on ? "on" : ""}`}>{t}</span>)}
+    </div>
+  );
+}
+
+export function DemoMenubar({ variant }) {
+  return (
+    <div className={`wmenubar mb-${variant} demo-full`}>
+      {["파일", "편집", "보기", "도움말"].map((t, i) => <span key={t} className={`mb-item ${i === 0 ? "on" : ""}`}>{t}</span>)}
+    </div>
+  );
+}
+
+export function DemoDropdown({ variant }) {
+  return (
+    <div className={`wmenu menu-${variant} demo-full`}>
+      <div className="mi">프로필 보기</div>
+      <div className="mi">설정</div>
+      <div className="msep" />
+      <div className="mi danger">로그아웃</div>
+    </div>
+  );
+}
+
+export function DemoCommand({ variant }) {
+  return (
+    <div className={`wcmd cmd-${variant} demo-full`}>
+      <div className="cmd-in"><span className="cb-ico">🔍</span><span className="ph">명령 또는 검색…</span></div>
+      <div className="cmd-grp">바로가기</div>
+      <div className="ci"><span>＋</span>새 주문</div>
+      <div className="ci"><span>⚙</span>설정 열기</div>
+    </div>
+  );
+}
+
+export function DemoSidebarNav({ variant }) {
+  const items = [["◧ 대시보드", true], ["▤ 주문", false], ["◔ 고객", false]];
+  return (
+    <div className={`wsbnav sb-${variant} demo-full`}>
+      {items.map(([t, on]) => <div key={t} className={`sb-item ${on ? "on" : ""}`}>{t}</div>)}
+    </div>
+  );
+}
+
+/* ══ 오버레이 · 피드백 ═══════════════════════════════════ */
+export function DemoDialog({ variant, button = "solid" }) {
+  return (
+    <div className="dlg-backdrop demo-full">
+      <div className={`wdlg dlg-${variant}`}>
+        <p className="dt">주문을 삭제할까요?</p>
+        <p className="dx">이 작업은 되돌릴 수 없습니다.</p>
+        <div className="df"><button className="wb ghost sm">취소</button><button className={`wb b-${button} sm`}>삭제</button></div>
       </div>
     </div>
   );
 }
 
-// ── 프로그레스 ────────────────────────
+export function DemoAlertDialog({ variant }) {
+  return (
+    <div className="dlg-backdrop demo-full">
+      <div className={`wdlg dlg-${variant}`}>
+        <div className="ad-head"><span className="ad-ico">⚠</span><p className="dt">계정을 삭제할까요?</p></div>
+        <p className="dx">모든 데이터가 영구 삭제됩니다.</p>
+        <div className="df"><button className="wb ghost sm">취소</button><button className="wb b-danger sm">영구 삭제</button></div>
+      </div>
+    </div>
+  );
+}
+
+export function DemoSheet({ variant }) {
+  const side = variant; // right/left/bottom
+  return (
+    <div className={`wsheet sheet-${side} demo-full`}>
+      <div className="sh-panel">
+        <div className="sh-head"><span className="sub">필터</span><span className="sh-x">✕</span></div>
+        <div className="sh-row">상태 · 전체</div>
+        <div className="sh-row">기간 · 최근 30일</div>
+      </div>
+    </div>
+  );
+}
+
+export function DemoPopover({ variant }) {
+  return (
+    <div className={`wpop pop-${variant} demo-full`}>
+      <div className="pop-t">알림 설정</div>
+      <div className="pop-row">이메일<span className="pop-v">켜짐</span></div>
+      <div className="pop-row">푸시<span className="pop-v">꺼짐</span></div>
+    </div>
+  );
+}
+
+export function DemoToast({ variant }) {
+  return (
+    <div className={`wtoast toast-${variant} demo-full`}>
+      <span className="tico">✓</span>
+      <div><div className="tt">저장되었습니다</div><div className="tx">변경사항이 반영됐어요.</div></div>
+      <span className="tx-close">✕</span>
+    </div>
+  );
+}
+
+export function DemoAlert({ variant }) {
+  return (
+    <div className={`walert al-${variant} demo-full`}>
+      <span className="ai">◆</span>
+      <div><p className="at">결제가 곧 만료됩니다</p><p className="ax">7일 내 갱신하지 않으면 Pro 기능이 중단됩니다.</p></div>
+    </div>
+  );
+}
+
 export function DemoProgress({ variant }) {
   return (
     <div className={`wprog pr-${variant} demo-full`}>
@@ -166,68 +439,7 @@ export function DemoProgress({ variant }) {
   );
 }
 
-// ── 탭 ────────────────────────────────
-export function DemoTabs({ variant, active = 0 }) {
-  const tabs = ["개요", "주문", "설정"];
-  return (
-    <div className={`wtabs tab-${variant} demo-full`}>
-      {tabs.map((t, i) => (
-        <span key={t} className={`tab ${i === active ? "on" : ""}`}>{t}</span>
-      ))}
-    </div>
-  );
-}
-
-// ── 다이얼로그 ────────────────────────
-export function DemoDialog({ variant, button = "solid" }) {
-  return (
-    <div className="dlg-backdrop demo-full">
-      <div className={`wdlg dlg-${variant}`}>
-        <p className="dt">주문을 삭제할까요?</p>
-        <p className="dx">이 작업은 되돌릴 수 없습니다.</p>
-        <div className="df">
-          <button className="wb ghost sm">취소</button>
-          <button className={`wb b-${button} sm`}>삭제</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── 반경 샘플 ─────────────────────────
-export function RadiusSample({ variant }) {
-  return (
-    <div className={`radius-${variant} demo-full`} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="wc card-flat" style={{ padding: "12px 14px" }}>
-        <div className="wi-field">
-          <input className="wi inp-outline" defaultValue="샘플 입력" />
-        </div>
-      </div>
-      <div className="demo-row"><button className="wb b-solid">버튼</button><span className="wbadge bdg-soft ok">태그</span></div>
-    </div>
-  );
-}
-
-// ── 밀도 샘플 ─────────────────────────
-export function DensitySample({ variant }) {
-  return (
-    <div className={`density-${variant} demo-full`}>
-      <div className="wc card-flat">
-        <p className="kpi-l" style={{ marginBottom: 8 }}>이번 주 요약</p>
-        <table className="wt tbl-lined">
-          <tbody>
-            <tr><td>신규 가입</td><td className="num">128</td></tr>
-            <tr><td>활성 세션</td><td className="num">1,024</td></tr>
-            <tr><td>결제 성공</td><td className="num">96%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ══ 차트 룩앤필 엔진 ═══════════════════════════════════════
-// 후보 = "룩앤필". 같은 데이터를 서로 다른 룩으로 그린다(차트 종류 결정 아님).
+/* ══ 차트 룩앤필 엔진 ════════════════════════════════════ */
 export const CHART_STYLES = {
   minimal:  { grid: false,  axis: false, strokeW: 2,   dots: false, area: false, dash: null,   bar: "flat" },
   gridded:  { grid: true,   axis: true,  strokeW: 2,   dots: true,  area: false, dash: null,   bar: "flat" },
@@ -238,7 +450,6 @@ export const CHART_STYLES = {
 
 const GRID = "hsl(214 32% 91% / .8)";
 const AXIS = { fontSize: 10, fill: "hsl(215 16% 47%)" };
-
 function gridEl(s) {
   if (!s.grid) return null;
   return <CartesianGrid vertical={false} stroke={GRID} strokeDasharray={s.grid === "dash" ? "3 3" : undefined} />;
@@ -255,14 +466,10 @@ function ChartTip({ active, payload, label }) {
   return (
     <div className="rc-tip">
       <div className="k">{label}</div>
-      {payload.map((p) => (
-        <div key={p.name}><span className="k">{p.name} </span><span className="v">{p.value}</span></div>
-      ))}
+      {payload.map((p) => <div key={p.name}><span className="k">{p.name} </span><span className="v">{p.value}</span></div>)}
     </div>
   );
 }
-
-// 추세형(선/면적) — 룩앤필만 style 로 바뀐다
 export function StyledLine({ style = "gradient", colors = THEME_COLORS.blue, data = TREND, h = 120 }) {
   const s = CHART_STYLES[style] ?? CHART_STYLES.gradient;
   const gid = `ln-${style}-${colors.c1.replace(/[^a-z0-9]/gi, "")}`;
@@ -295,8 +502,6 @@ export function StyledLine({ style = "gradient", colors = THEME_COLORS.blue, dat
     </div>
   );
 }
-
-// 비교형(막대) — 같은 룩앤필을 막대에도 적용
 export function StyledBar({ style = "gradient", colors = THEME_COLORS.blue, data = DEPT, h = 96 }) {
   const s = CHART_STYLES[style] ?? CHART_STYLES.gradient;
   const gid = `br-${style}-${colors.c1.replace(/[^a-z0-9]/gi, "")}`;
@@ -324,8 +529,6 @@ export function StyledBar({ style = "gradient", colors = THEME_COLORS.blue, data
     </div>
   );
 }
-
-// 후보 캔버스: "같은 룩, 두 종류(선+막대)" — 룩앤필이 종류를 가리지 않음을 보여준다
 export function DemoChart({ variant, colors = THEME_COLORS.blue }) {
   return (
     <div className="demo-full" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -335,7 +538,7 @@ export function DemoChart({ variant, colors = THEME_COLORS.blue }) {
   );
 }
 
-// ── 테마/타이포 샘플 ───────────────────
+/* ══ 기초 샘플 ═══════════════════════════════════════════ */
 const THEME_SWATCH = {
   blue:    ["hsl(221 83% 53%)", "hsl(262 83% 63%)", "hsl(199 89% 48%)"],
   violet:  ["hsl(262 83% 58%)", "hsl(291 70% 55%)", "hsl(221 83% 60%)"],
@@ -347,15 +550,8 @@ const THEME_SWATCH = {
 export function ThemeSample({ theme }) {
   return (
     <div className={`theme-${theme}`} style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
-      <div className="demo-swatches">
-        {THEME_SWATCH[theme].map((c, i) => (
-          <div key={i} className="demo-swatch" style={{ background: c }} />
-        ))}
-      </div>
-      <div className="demo-row">
-        <button className="wb b-solid">주요 액션</button>
-        <Badge variant="soft" kind="ok">완료</Badge>
-      </div>
+      <div className="demo-swatches">{THEME_SWATCH[theme].map((c, i) => <div key={i} className="demo-swatch" style={{ background: c }} />)}</div>
+      <div className="demo-row"><button className="wb b-solid">주요 액션</button><Badge variant="soft" kind="ok">완료</Badge></div>
     </div>
   );
 }
@@ -368,3 +564,74 @@ export function TypeSample({ type }) {
     </div>
   );
 }
+export function RadiusSample({ variant }) {
+  return (
+    <div className={`radius-${variant} demo-full`} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="wc card-flat" style={{ padding: "12px 14px" }}>
+        <div className="wi-field"><input className="wi inp-outline" defaultValue="샘플 입력" /></div>
+      </div>
+      <div className="demo-row"><button className="wb b-solid">버튼</button><span className="wbadge bdg-soft ok">태그</span></div>
+    </div>
+  );
+}
+export function DensitySample({ variant }) {
+  return (
+    <div className={`density-${variant} demo-full`}>
+      <div className="wc card-flat">
+        <p className="kpi-l" style={{ marginBottom: 8 }}>이번 주 요약</p>
+        <table className="wt tbl-lined"><tbody>
+          <tr><td>신규 가입</td><td className="num">128</td></tr>
+          <tr><td>활성 세션</td><td className="num">1,024</td></tr>
+          <tr><td>결제 성공</td><td className="num">96%</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  );
+}
+
+/* ══ 요소 id → 렌더 함수 레지스트리 ══════════════════════
+   워크숍(후보 캔버스)과 조립 페이지(갤러리)가 공유한다. */
+export const DEMO = {
+  theme:      (v) => <ThemeSample theme={v} />,
+  type:       (v) => <TypeSample type={v} />,
+  radius:     (v) => <RadiusSample variant={v} />,
+  density:    (v) => <DensitySample variant={v} />,
+  button:     (v) => <DemoButton variant={v} />,
+  input:      (v) => <DemoInput variant={v} />,
+  textarea:   (v) => <DemoTextarea variant={v} />,
+  select:     (v) => <DemoSelect variant={v} />,
+  combobox:   (v) => <DemoCombobox variant={v} />,
+  checkbox:   (v) => <DemoCheckbox variant={v} />,
+  radio:      (v) => <DemoRadio variant={v} />,
+  switch:     (v) => <DemoSwitch variant={v} />,
+  slider:     (v) => <DemoSlider variant={v} />,
+  toggle:     (v) => <DemoToggle variant={v} />,
+  otp:        (v) => <DemoOtp variant={v} />,
+  datefield:  (v) => <DemoDateField variant={v} />,
+  field:      (v) => <DemoField variant={v} />,
+  card:       (v) => <DemoCard variant={v} />,
+  table:      (v) => <DemoTable variant={v} rows={ORDERS.slice(0, 3)} />,
+  badge:      (v) => <DemoBadge variant={v} />,
+  avatar:     (v) => <DemoAvatar variant={v} />,
+  accordion:  (v) => <DemoAccordion variant={v} />,
+  skeleton:   (v) => <DemoSkeleton variant={v} />,
+  tooltip:    (v) => <DemoTooltip variant={v} />,
+  hovercard:  (v) => <DemoHoverCard variant={v} />,
+  separator:  (v) => <DemoSeparator variant={v} />,
+  tabs:       (v) => <DemoTabs variant={v} />,
+  breadcrumb: (v) => <DemoBreadcrumb variant={v} />,
+  pagination: (v) => <DemoPagination variant={v} />,
+  navmenu:    (v) => <DemoNavMenu variant={v} />,
+  menubar:    (v) => <DemoMenubar variant={v} />,
+  dropdown:   (v) => <DemoDropdown variant={v} />,
+  command:    (v) => <DemoCommand variant={v} />,
+  sidebarnav: (v) => <DemoSidebarNav variant={v} />,
+  dialog:     (v) => <DemoDialog variant={v} />,
+  alertdialog:(v) => <DemoAlertDialog variant={v} />,
+  sheet:      (v) => <DemoSheet variant={v} />,
+  popover:    (v) => <DemoPopover variant={v} />,
+  toast:      (v) => <DemoToast variant={v} />,
+  alert:      (v) => <DemoAlert variant={v} />,
+  progress:   (v) => <DemoProgress variant={v} />,
+  chart:      (v) => <DemoChart variant={v} />,
+};

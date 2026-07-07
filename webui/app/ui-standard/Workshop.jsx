@@ -1,35 +1,11 @@
 "use client";
 import { useState } from "react";
 import { UI_ELEMENTS, UI_GROUPS } from "@/lib/ui-elements";
-import { ORDERS } from "@/lib/ui-dummy";
-import {
-  DemoButton, DemoCard, DemoTable, DemoBadge, DemoChart, DemoInput,
-  DemoSelect, DemoCheckbox, DemoSwitch, DemoAvatar, DemoAlert, DemoProgress,
-  DemoTabs, DemoDialog, RadiusSample, DensitySample, ThemeSample, TypeSample,
-} from "./demos";
+import { DEMO } from "./demos";
 
 function Canvas({ elementId, cid }) {
-  switch (elementId) {
-    case "theme":    return <ThemeSample theme={cid} />;
-    case "type":     return <TypeSample type={cid} />;
-    case "radius":   return <RadiusSample variant={cid} />;
-    case "density":  return <DensitySample variant={cid} />;
-    case "button":   return <DemoButton variant={cid} />;
-    case "input":    return <DemoInput variant={cid} />;
-    case "select":   return <DemoSelect variant={cid} />;
-    case "checkbox": return <DemoCheckbox variant={cid} />;
-    case "switch":   return <DemoSwitch variant={cid} />;
-    case "card":     return <DemoCard variant={cid} />;
-    case "table":    return <DemoTable variant={cid} rows={ORDERS.slice(0, 3)} />;
-    case "badge":    return <DemoBadge variant={cid} />;
-    case "avatar":   return <DemoAvatar variant={cid} />;
-    case "alert":    return <DemoAlert variant={cid} />;
-    case "progress": return <DemoProgress variant={cid} />;
-    case "tabs":     return <DemoTabs variant={cid} />;
-    case "dialog":   return <DemoDialog variant={cid} />;
-    case "chart":    return <DemoChart variant={cid} />;
-    default: return null;
-  }
+  const render = DEMO[elementId];
+  return render ? render(cid) : null;
 }
 
 export default function Workshop({ initial }) {
