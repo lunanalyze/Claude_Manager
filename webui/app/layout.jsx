@@ -1,5 +1,6 @@
 import "./globals.css";
 import { getSidebarGroups } from "@/lib/content";
+import ThemeToggle from "./ThemeToggle";
 
 export const metadata = {
   title: "Claude_Manager",
@@ -9,15 +10,22 @@ export const metadata = {
 // 로컬 파일을 매 요청마다 다시 읽도록 (캐시 끔)
 export const dynamic = "force-dynamic";
 
+// 페인트 전에 저장된 테마를 적용해 깜빡임(FOUC) 방지
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('cm-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+
 export default function RootLayout({ children }) {
   const groups = getSidebarGroups();
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+      </head>
       <body>
         <div className="layout">
           <nav className="sidebar">
             <h1><a href="/">Claude_Manager</a></h1>
             <div className="sub">읽기 전용 대시보드</div>
+            <ThemeToggle />
             <div className="group">
               <div className="label">관제</div>
               <ul>
