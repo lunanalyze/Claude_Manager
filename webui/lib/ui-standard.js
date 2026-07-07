@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { REPO_ROOT } from "@/lib/content";
-import { UI_ELEMENTS, defaultSelections } from "@/lib/ui-elements";
+import { UI_ELEMENTS, UI_GROUPS, defaultSelections, candidateName } from "@/lib/ui-elements";
 
-export { UI_ELEMENTS, defaultSelections };
+export { UI_ELEMENTS, UI_GROUPS, defaultSelections, candidateName };
 
 // 확정된 선택의 단일 원본 (표준 그 자체). git 추적.
 const SELECTIONS_PATH = path.join(REPO_ROOT, "docs", "standards", "ui", "selections.json");
