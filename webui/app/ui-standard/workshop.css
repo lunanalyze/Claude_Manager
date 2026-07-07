@@ -734,6 +734,74 @@
 .notif-count .nf-badge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; top: -4px; right: -6px; }
 .notif-pill .nf-badge { min-width: 20px; height: 16px; padding: 0 5px; border-radius: 999px; top: -4px; right: -8px; }
 
+/* ══════════════════════════════════════════════════════════
+   요소 쇼케이스 — 맥락 장면 + 적용 요소 목록
+   ══════════════════════════════════════════════════════════ */
+.sc-wrap { max-width: 1180px; }
+.sc-intro h1 { font-size: 1.9rem; margin: 8px 0 8px; }
+.sc-intro p { color: var(--text); max-width: 760px; margin: 0 0 14px; }
+.sc-cover { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sc-cover-badge { font-size: 12.5px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+.sc-cover-badge.ok { background: rgba(80, 200, 120, .16); color: #4bb37a; }
+.sc-cover-badge.warn { background: rgba(230, 160, 60, .18); color: #d59340; }
+.sc-cover-miss { font-size: 12px; color: #d59340; }
+.sc-cover-note { font-size: 12px; color: var(--muted); }
+
+.sc-scene { margin-top: 40px; }
+.sc-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.sc-num { width: 28px; height: 28px; border-radius: 999px; background: var(--accent); color: var(--accent-fg);
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: 0 0 auto; }
+.sc-head h2 { font-size: 1.2rem; margin: 0; }
+.sc-head p { color: var(--muted); font-size: 13px; margin: 3px 0 0; }
+
+/* 밝은 제품 캔버스 */
+.sc-canvas { background: hsl(var(--background)); color: hsl(var(--foreground));
+  border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
+
+/* 적용된 요소 목록 (별도 영역) */
+.sc-applied { margin-top: 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 10px; background: var(--panel); padding: 12px 14px; }
+.sc-applied-t { font-size: 11.5px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 9px; }
+.sc-applied-t span { color: var(--accent); }
+.sc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc-chip { font-size: 11px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; }
+.sc-chip b { color: var(--text); font-weight: 600; margin-right: 5px; }
+
+/* 장면 내부 레이아웃 (밝은 캔버스 안 → ws 토큰 사용) */
+.sc-topbar { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid hsl(var(--border)); }
+.sc-grow { flex: 1 1 auto; }
+.sc-cols { display: flex; gap: 16px; }
+.sc-side { width: 180px; flex: 0 0 auto; }
+.sc-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.sc-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sc-cardhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.sc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sc-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
+.sc-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
+.sc-filters > * { min-width: 150px; }
+.sc-tablefoot { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+/* 오버레이 장면 무대 */
+.sc-stage { position: relative; border: 1px dashed hsl(var(--border)); border-radius: var(--radius);
+  background: hsl(var(--muted) / .35); padding: 26px 18px 18px; display: flex; align-items: center; justify-content: center; }
+.sc-stage-l { position: absolute; top: 8px; left: 12px; font-size: 10.5px; font-weight: 600; letter-spacing: .03em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+
+/* 결과 페이지 → 쇼케이스 CTA */
+.res-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  margin-top: 30px; padding: 18px 22px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+.res-cta h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.res-cta p { margin: 0; color: var(--muted); font-size: 13px; max-width: 560px; }
+.res-cta a.cta-btn { flex: 0 0 auto; padding: 9px 16px; border-radius: 8px; background: var(--accent); color: var(--accent-fg);
+  font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.res-cta a.cta-btn:hover { text-decoration: none; filter: brightness(1.05); }
+
+@media (max-width: 820px) {
+  .sc-two, .sc-three, .sc-kpis { grid-template-columns: 1fr; }
+  .sc-cols { flex-direction: column; }
+  .sc-side { width: auto; }
+}
+
 /* ══════════════════════════════════════════════
    워크숍 크롬 (선택 UI) — 다크 대시보드 위에 얹힘
    ══════════════════════════════════════════════ */

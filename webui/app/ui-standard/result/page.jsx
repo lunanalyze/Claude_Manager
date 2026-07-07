@@ -26,6 +26,14 @@ export default function ResultPage() {
         </div>
       </div>
       <Assembled sel={sel} />
+
+      <div className="res-cta">
+        <div>
+          <h3>모든 요소를 실제 화면 맥락에서 보기</h3>
+          <p>위 대시보드에 크게 쓰이지 않은 요소까지, 66개 전부를 관리자 앱의 여러 장면(앱 셸·목록·상세·설정·오버레이)에 배치했습니다. 각 장면마다 적용된 요소 목록이 붙습니다.</p>
+        </div>
+        <a className="cta-btn" href="/ui-standard/showcase">요소 쇼케이스 열기 →</a>
+      </div>
     </div>
   );
 }

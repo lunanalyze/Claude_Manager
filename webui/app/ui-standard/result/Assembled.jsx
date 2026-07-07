@@ -2,17 +2,9 @@
 import {
   DemoButton, DemoCard, DemoTable, DemoInput, DemoSelect, DemoCheckbox, DemoSwitch,
   DemoAvatar, DemoAlert, DemoProgress, DemoTabs, DemoDialog, Badge,
-  StyledLine, StyledBar, THEME_COLORS, DEMO,
+  StyledLine, StyledBar, THEME_COLORS,
 } from "../demos";
-import { UI_GROUPS, UI_ELEMENTS, candidateName } from "@/lib/ui-elements";
 import { KPIS, ORDERS } from "@/lib/ui-dummy";
-
-// 히어로 대시보드에서 이미 크게 쓴 요소는 갤러리에서 생략(중복 방지)
-const HERO_SHOWN = new Set([
-  "theme", "type", "radius", "density", "button", "card", "table", "badge",
-  "avatar", "tabs", "alert", "progress", "input", "select", "checkbox", "switch",
-  "chart", "dialog",
-]);
 
 export default function Assembled({ sel }) {
   const colors = THEME_COLORS[sel.theme] ?? THEME_COLORS.blue;
@@ -98,33 +90,6 @@ export default function Assembled({ sel }) {
         </div>
       </div>
 
-      {/* 전체 요소 갤러리 — 히어로에 안 나온 나머지 선택까지 모두 반영 */}
-      <div className="res-gallery">
-        <div className="ttl" style={{ fontSize: 18, marginBottom: 4 }}>전체 요소 갤러리</div>
-        <div className="txt" style={{ color: "hsl(var(--muted-foreground))", marginBottom: 18 }}>
-          위 대시보드에 크게 쓰이지 않은 나머지 컴포넌트까지, 지정한 표준 그대로 렌더한 모음입니다.
-        </div>
-        {UI_GROUPS.filter((g) => g.id !== "foundations" && g.id !== "chart").map((g) => {
-          const els = UI_ELEMENTS.filter((e) => e.group === g.id && !HERO_SHOWN.has(e.id));
-          if (!els.length) return null;
-          return (
-            <div key={g.id} style={{ marginTop: 18 }}>
-              <div className="rg-group">{g.label}</div>
-              <div className="rg-grid">
-                {els.map((e) => (
-                  <div className="rg-tile" key={e.id}>
-                    <div className="rg-canvas">{DEMO[e.id]?.(sel[e.id])}</div>
-                    <div className="rg-cap">
-                      <span className="rg-name">{e.title}</span>
-                      <span className="rg-pick">{candidateName(e.id, sel[e.id])}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

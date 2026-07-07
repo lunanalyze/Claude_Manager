@@ -157,7 +157,7 @@ a:hover { text-decoration: underline; }
 
 /* ── 관제탑 (Control Tower) ───────────────────────────── */
 .tower { max-width: 1100px; }
-.content:has(.tower), .content:has(.wsx), .content:has(.res-page) { max-width: 1180px; }
+.content:has(.tower), .content:has(.wsx), .content:has(.res-page), .content:has(.sc-wrap) { max-width: 1180px; }
 
 .tower-hero h1 { font-size: 1.9rem; margin: 0 0 8px; }
 .tower-hero p { color: var(--text); margin: 0 0 14px; max-width: 760px; }
