@@ -133,6 +133,8 @@ const SHARED_SPACES = [
     desc: "기술 스택·UI 등 모든 프로젝트가 따르는 공유 표준. 각 환경 CLAUDE.md가 @import 해 컨텍스트에 싣는다." },
   { root: "repo", rel: "docs/references", kind: "dir", icon: "📎", title: "참고자료", share: "git",
     desc: "CLAUDE.md에 링크로 거는 참고 문서(UI 참고 등). 무거운 자료는 @import 대신 링크로 걸어 컨텍스트를 아낀다." },
+  { root: "repo", rel: "docs/issues", kind: "dir", icon: "🐛", title: "이슈 로그", share: "git",
+    desc: "한 번에 안 되어 검증했거나 실패 후 해결한 사례를 한 건당 한 파일로 누적. 다음 세션이 같은 벽을 피하도록 재활용한다(/issue-log)." },
   { root: "repo", rel: "skills", kind: "dir", icon: "🧩", title: "Skills (원본)", share: "git",
     desc: "skill 소스의 단일 원본. 각 환경 ~/.claude/skills 가 이곳을 심링크/복사해 설치한다." },
   { root: "repo", rel: "CLAUDE.md", kind: "file", icon: "📖", title: "프로젝트 지침", share: "git",
