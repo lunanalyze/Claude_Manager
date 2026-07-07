@@ -22,4 +22,8 @@ Claude Code에게 뭔가 시켰을 때 **한 번에 되지 않아 검증이 필�
 
 ## 목록
 
-(아직 없음 — `/issue-log` 로 첫 사례를 기록한다.)
+- [dev 서버 포그라운드 "실행 안 됨" 오판 + 파이프 행](./dev-server-foreground-hang.md) — 장기 실행 서버는 detached+로그+curl로 · `npm run dev, setsid, fuser, EADDRINUSE`
+- [recharts 차트가 curl HTML엔 안 보임 (SSR 오판)](./recharts-ssr-curl-empty.md) — ResponsiveContainer는 클라이언트 하이드레이션 후 렌더 · `recharts, SSR, curl`
+- [Next.js SSR HTML grep 시 텍스트가 `<!-- -->`로 쪼개짐](./nextjs-ssr-html-grep-comment-nodes.md) — 매칭 전 주석 노드 제거 · `react ssr, comment nodes, grep`
+- [recharts 색이 CSS var()로 불안정 → JS 색 매핑](./recharts-css-var-svg-color.md) — SVG 차트는 토큰 대신 JS 색 맵 · `recharts, css variable, svg`
+- [WSL jq 미설치 → exit 127, JSON은 python3](./wsl-jq-missing.md) — 셸 JSON 파싱은 python3/node · `wsl, jq, command not found`
