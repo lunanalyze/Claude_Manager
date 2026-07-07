@@ -169,7 +169,83 @@ a:hover { text-decoration: underline; }
 
 /* ── 관제탑 (Control Tower) ───────────────────────────── */
 .tower { max-width: 1100px; }
-.content:has(.tower), .content:has(.wsx), .content:has(.res-page), .content:has(.sc-wrap) { max-width: 1180px; }
+.content:has(.tower), .content:has(.wsx), .content:has(.res-page), .content:has(.sc-wrap), .content:has(.eco) { max-width: 1180px; }
+
+/* ── 개발 생태계 시각화 ───────────────────────────────── */
+.eco-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.eco-top h1 { font-size: 1.9rem; margin: 0 0 8px; }
+.eco-top p { color: var(--muted); font-size: 13.5px; margin: 0; max-width: 720px; }
+.eco-top p em { color: var(--muted); font-style: normal; opacity: .8; }
+
+.eco-refresh { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--accent); color: var(--accent-fg);
+  font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.eco-refresh:hover { filter: brightness(1.05); }
+.eco-refresh:disabled { opacity: .7; cursor: default; }
+.eco-refresh-ico { display: inline-block; font-size: 15px; line-height: 1; }
+.eco-refresh-ico.spin { animation: cm-spin .7s linear infinite; }
+
+.eco-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0; }
+.eco-stat { border: 1px solid var(--border); border-radius: calc(var(--radius) + 2px); background: var(--panel); padding: 14px 16px; }
+.eco-stat-v { font-size: 24px; font-weight: 700; letter-spacing: -.02em; color: var(--text); }
+.eco-stat-l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.eco-diagram { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+
+.eco-node, .eco-hub, .eco-shared {
+  border: 1px solid var(--border); border-radius: calc(var(--radius) + 2px); background: var(--panel); padding: 16px 18px;
+}
+.eco-hub { border-top: 3px solid var(--accent); max-width: 620px; margin: 0 auto; width: 100%; box-shadow: 0 6px 18px -10px rgb(15 23 42 / .25); }
+.eco-node-head, .eco-hub-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.eco-node-ico { font-size: 17px; }
+.eco-node-title { font-weight: 600; font-size: 14.5px; flex: 1 1 auto; }
+.eco-tag { font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); white-space: nowrap; }
+.eco-tag.muted { background: var(--code-bg); color: var(--muted); }
+.eco-tag.webui { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.eco-path { display: inline-block; font-size: 11.5px; color: var(--muted); background: var(--code-bg);
+  padding: 3px 8px; border-radius: var(--radius); font-family: ui-monospace, Menlo, Consolas, monospace; }
+.eco-hub-meta { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.eco-hub-meta b { color: var(--accent); }
+.eco-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+.eco-lastmsg { font-size: 12px; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+/* 연결 밴드 */
+.eco-band { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 0; color: var(--muted); font-size: 12px; }
+.eco-band::before, .eco-band::after { content: ""; height: 22px; width: 2px; background: var(--border); }
+.eco-band.down { padding: 10px 0; }
+.eco-band-arrow { font-weight: 600; color: var(--accent); }
+.eco-band-label { text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
+
+.eco-envs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.eco-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; }
+.eco-k { color: var(--muted); font-size: 11.5px; }
+.eco-mono { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--text); }
+.eco-sync { font-size: 11.5px; font-weight: 600; margin-left: auto; }
+.eco-sync.ok { color: #4bb37a; }
+.eco-sync.off { color: #d59340; }
+.eco-sync.na { color: var(--muted); }
+.eco-skills { margin-top: 12px; }
+.eco-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.eco-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text);
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; }
+.eco-chip em { font-style: normal; font-size: 10px; color: var(--muted); }
+.eco-chip.off { color: var(--muted); }
+
+.eco-shared { max-width: 760px; margin: 0 auto; width: 100%; }
+.eco-shared-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 4px 0 12px; }
+.eco-cat { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--bg); color: var(--text); }
+.eco-cat:hover { border-color: var(--accent); text-decoration: none; }
+.eco-cat b { font-size: 20px; font-weight: 700; color: var(--accent); }
+
+.eco-note { margin-top: 24px; padding: 14px 16px; border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: var(--radius); background: var(--panel); color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+
+@media (max-width: 820px) {
+  .eco-stats, .eco-shared-grid { grid-template-columns: repeat(2, 1fr); }
+  .eco-envs { grid-template-columns: 1fr; }
+}
 
 .tower-hero h1 { font-size: 1.9rem; margin: 0 0 8px; }
 .tower-hero p { color: var(--text); margin: 0 0 14px; max-width: 760px; }

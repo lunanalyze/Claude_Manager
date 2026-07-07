@@ -33,6 +33,7 @@ export default function RootLayout({ children }) {
               <div className="label">관제</div>
               <ul>
                 <li><a href="/">🗼 관제탑</a></li>
+                <li><a href="/ecosystem">🌐 개발 생태계</a></li>
                 <li><a href="/ui-standard">🎛️ UI 표준 워크숍</a></li>
                 <li><a href="/ui-standard/showcase">🖼️ UI 쇼케이스</a></li>
               </ul>
