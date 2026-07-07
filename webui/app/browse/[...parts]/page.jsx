@@ -123,7 +123,9 @@ function DirView({ r }) {
             <li key={e.href}>
               <a href={e.href}>
                 <span className="dv-ico">{e.isDir ? "📁" : "📄"}</span>
-                <span className="dv-name">{e.name}</span>
+                <span className="dv-name">{e.label}
+                  {e.label !== e.name && <span className="dv-sub"> {e.name}</span>}
+                </span>
                 <span className="dv-meta">
                   {e.isDir ? "" : `${e.size} B · `}{fmt(e.mtime)}
                 </span>
@@ -136,6 +138,39 @@ function DirView({ r }) {
   );
 }
 
+// YAML frontmatter( --- … --- )를 분리한다. (간단 파서 — 라이브러리 불필요)
+function splitFrontmatter(text) {
+  const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (!m) return { meta: null, body: text };
+  const meta = {};
+  for (const line of m[1].split(/\r?\n/)) {
+    const kv = line.match(/^([A-Za-z0-9_]+):\s*(.*)$/);
+    if (!kv) continue;
+    let [, k, v] = kv;
+    v = v.trim();
+    if (v.startsWith("[") && v.endsWith("]")) {
+      v = v.slice(1, -1).split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+    } else {
+      v = v.replace(/^["']|["']$/g, "");
+    }
+    meta[k] = v;
+  }
+  return { meta, body: text.slice(m[0].length) };
+}
+
+function DocMeta({ meta }) {
+  const line = [meta.type, meta.status].filter(Boolean).join(" · ");
+  const tags = Array.isArray(meta.tags) ? meta.tags : meta.tags ? [meta.tags] : [];
+  return (
+    <div className="doc-fm">
+      {line && <span className="fm-pill">{line}</span>}
+      {meta.date && <span className="fm-k">📅 {meta.date}</span>}
+      {meta.stack && <span className="fm-k">🧱 {meta.stack}</span>}
+      {tags.map((t) => <span className="fm-tag" key={t}>{t}</span>)}
+    </div>
+  );
+}
+
 function FileView({ abs }) {
   const file = readFileSafe(abs);
   if (!file) notFound();
@@ -143,10 +178,12 @@ function FileView({ abs }) {
     return <div className="dv-empty">파일이 너무 큽니다({Math.round(file.size / 1024)} KB). 뷰어에서 생략합니다.</div>;
   }
   if (file.ext === ".md") {
+    const { meta, body } = splitFrontmatter(file.content);
     return (
       <div className="md">
+        {meta && <DocMeta meta={meta} />}
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-          {file.content}
+          {body}
         </ReactMarkdown>
       </div>
     );

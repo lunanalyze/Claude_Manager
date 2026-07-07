@@ -1,5 +1,4 @@
 import "./globals.css";
-import { getSidebarGroups } from "@/lib/content";
 import { resolvedSelections } from "@/lib/ui-standard";
 import { standardStyle, bodyClass, bodyData } from "@/lib/standard-tokens";
 import ThemeToggle from "./ThemeToggle";
@@ -16,7 +15,6 @@ export const dynamic = "force-dynamic";
 const THEME_INIT = `(function(){try{var t=localStorage.getItem('cm-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
 
 export default function RootLayout({ children }) {
-  const groups = getSidebarGroups();
   const sel = resolvedSelections(); // 워크숍에서 고른 UI 표준
   return (
     <html lang="ko" suppressHydrationWarning>
@@ -34,10 +32,9 @@ export default function RootLayout({ children }) {
             <div className="group">
               <div className="label">관제</div>
               <ul>
-                <li><a href="/">🗼 관제탑 (전체 지형)</a></li>
+                <li><a href="/">🗼 관제탑</a></li>
                 <li><a href="/ui-standard">🎛️ UI 표준 워크숍</a></li>
-                <li><a href="/ui-standard/result">🧩 조립된 표준 페이지</a></li>
-                <li><a href="/ui-standard/showcase">🖼️ 요소 쇼케이스</a></li>
+                <li><a href="/ui-standard/showcase">🖼️ UI 쇼케이스</a></li>
               </ul>
             </div>
             <div className="group">
@@ -47,22 +44,6 @@ export default function RootLayout({ children }) {
                 <li><a href="/browse/win">🪟 Windows .claude</a></li>
               </ul>
             </div>
-            {groups.map((g) => (
-              <div className="group" key={g.key}>
-                <div className="label">{g.label}</div>
-                {g.items.length === 0 ? (
-                  <div className="empty">(없음)</div>
-                ) : (
-                  <ul>
-                    {g.items.map((it) => (
-                      <li key={it.rel}>
-                        <a href={it.href} title={it.rel}>{it.title}</a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
           </nav>
           <main className="content">{children}</main>
         </div>

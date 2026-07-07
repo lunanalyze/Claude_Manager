@@ -47,7 +47,7 @@ export default function Workshop({ initial }) {
         <div className="wsx-progress">
           <div className="wsx-bar"><i style={{ width: `${(confirmed / total) * 100}%` }} /></div>
           <span className="n">{confirmed} / {total} 지정됨 <em>(미지정은 기본값 사용)</em></span>
-          <a className="result-link" href="/ui-standard/result">조립된 페이지 보기 →</a>
+          <a className="result-link" href="/ui-standard/showcase">UI 쇼케이스 보기 →</a>
         </div>
       </div>
 

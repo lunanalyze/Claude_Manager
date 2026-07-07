@@ -55,7 +55,7 @@ export default function Home() {
   return (
     <div className="tower">
       <header className="tower-hero">
-        <h1>🗼 관제탑 (Control Tower)</h1>
+        <h1>관제탑</h1>
         <p>
           Claude의 동작을 제어·관리하는 <strong>모든 파일 공간</strong>을 한곳에서 조망합니다.
           <strong> WSL</strong>과 <strong>Windows</strong>는 별개 환경으로 각각 관리하고, 공유 콘텐츠만
@@ -64,7 +64,7 @@ export default function Home() {
         <div className="tower-stats">
           <span><b>{live}</b>/{total} 공간 활성</span>
           <span className="dot" />
-          <a href="/ui-preview">🎨 UI 표준 미리보기</a>
+          <a href="/ui-standard">🎛️ UI 표준 워크숍</a>
         </div>
       </header>
 

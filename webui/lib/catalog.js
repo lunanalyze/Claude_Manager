@@ -52,12 +52,35 @@ function allowedSubtrees(rootKey) {
   return rels;
 }
 
+// repo(git 공유 콘텐츠)는 비밀이 없으므로 노이즈 디렉터리만 빼고 전체 열람 허용
+// → 폴더를 타고 끝까지 탐색 가능(중간 폴더 404 없음).
+// env 루트(~/.claude)는 비밀·런타임 내부가 있어 선언된 공간(및 하위)만 허용.
+const REPO_DENY_DIRS = new Set(["node_modules", ".git", ".next", ".turbo", ".vercel"]);
 function isAllowed(rootKey, abs) {
   const base = ROOTS[rootKey];
   if (abs === base) return true; // 루트는 큐레이션된 공간 인덱스로 렌더
+  if (rootKey === "repo") {
+    const segs = path.relative(base, abs).split(path.sep);
+    return !segs.some((s) => REPO_DENY_DIRS.has(s));
+  }
   return allowedSubtrees(rootKey).some(
     (t) => abs === t || abs.startsWith(t + path.sep)
   );
+}
+
+// md 문서의 표시용 제목: frontmatter title → 첫 H1 → null
+export function mdTitle(abs) {
+  try {
+    const txt = fs.readFileSync(abs, "utf-8").slice(0, 4000);
+    const fm = txt.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (fm) {
+      const t = fm[1].match(/^title:\s*(.+)$/m);
+      if (t) return t[1].trim().replace(/^["']|["']$/g, "");
+    }
+    const h = txt.match(/^#\s+(.+)$/m);
+    if (h) return h[1].trim();
+  } catch {}
+  return null;
 }
 
 // parts[0] = rootKey, 나머지 = 루트 기준 상대경로 세그먼트
@@ -101,9 +124,12 @@ export function listDir(abs, rootKey, base) {
     let st;
     try { st = fs.statSync(full); } catch { continue; }
     const isDir = st.isDirectory();
-    if (!isDir && HIDDEN_EXT.has(path.extname(name).toLowerCase())) continue;
+    const ext = path.extname(name).toLowerCase();
+    if (!isDir && HIDDEN_EXT.has(ext)) continue;
     entries.push({
       name,
+      // md 파일은 파일명 대신 문서 제목을 표시(없으면 파일명)
+      label: (!isDir && ext === ".md" && mdTitle(full)) || name,
       isDir,
       size: isDir ? null : st.size,
       mtime: st.mtimeMs,

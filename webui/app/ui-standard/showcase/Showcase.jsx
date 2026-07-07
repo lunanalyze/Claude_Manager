@@ -64,7 +64,7 @@ export default function Showcase({ sel }) {
     <div className="sc-wrap">
       <div className="sc-intro">
         <a href="/ui-standard">← 워크숍으로</a>
-        <h1>요소 쇼케이스</h1>
+        <h1>UI 쇼케이스</h1>
         <p>지정한 표준을 실제 화면 맥락에 배치했습니다. 66개 요소가 낱개 타일이 아니라 관리자 앱의 여러 장면 속에서 쓰입니다. 각 장면 아래에는 <b>적용된 요소 목록</b>이 붙습니다.</p>
         <div className="sc-cover">
           <span className={`sc-cover-badge ${missing.length ? "warn" : "ok"}`}>
