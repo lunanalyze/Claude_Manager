@@ -33,13 +33,13 @@
 
 | 포트 | 프로젝트 | 서비스 | 현재 코드 | 적용 | 고정 위치 |
 |---|---|---|---|---|---|
-| 3010 | Claude_Manager | webui (Next 15) | 3000 (기본값) | 미적용 | `webui/package.json` dev·start |
+| 3010 | Claude_Manager | webui (Next 15) | 3010 | **적용** | `webui/package.json:7,9` |
 | 3020 | MOM_Generator | apps/web (Next 14) | 3020 | **적용** | `apps/web/package.json:6,8` |
-| 3030 | credit-review-assistant | apps/web (Next 14) | 3000 (명시) | 미적용 | `apps/web/package.json:6,8` |
-| 3040 | JB_Worldcup | Next 14 | 3000 (기본값) | 미적용 | `package.json:6,8` |
-| 3050 | literacy | Next 16 | 3000 (기본값) | 미적용 | `package.json:6,8` |
-| 3060 | Project_Manager | Next 14 WebUI | 3000 (기본값) | 미적용 | `package.json:6,8` |
-| 3070 | Ubob_Recon | WebUI (node:http) | 5173 (기본값) | 미적용 | `src/server.mjs:14` |
+| 3030 | credit-review-assistant | apps/web (Next 14) | 3030 | **적용** | `apps/web/package.json:6,8` |
+| 3040 | JB_Worldcup | Next 14 | 3040 | **적용** | `package.json:6,8` |
+| 3050 | literacy | Next 16 | 3050 | **적용** | `package.json:6,8` |
+| 3060 | Project_Manager | Next 14 WebUI | 3060 | **적용** | `package.json:6,8` |
+| 3070 | Ubob_Recon | WebUI (node:http) | 3070 | **적용** | `src/server.mjs:14` |
 | 3100 | AI_Compliance | Next 14 | 3100 | **적용** | `package.json:6,8` |
 
 ### 백엔드 API
@@ -47,15 +47,15 @@
 | 포트 | 프로젝트 | 서비스 | 현재 코드 | 적용 | 고정 위치 |
 |---|---|---|---|---|---|
 | 8100 | MOM_Generator | Spring Boot (Java 8) | 8100 | **적용** | `apps/api/.../application.yml:8` |
-| 8110 | credit-review-assistant | Spring Boot | 8000 | 미적용 | `apps/api/.../application.yml:3` |
-| 8120 | projects/AI_IB_Agent | FastAPI + uvicorn | 8767 | 미적용 (우선순위 낮음) | `launcher.py:35` |
+| 8110 | credit-review-assistant | Spring Boot | 8110 | **적용** | `apps/api/.../application.yml:3` |
+| 8120 | projects/AI_IB_Agent | FastAPI + uvicorn | 8120 | **적용** | `launcher.py:35` |
 
 ### Cloudflare wrangler 로컬
 
 | 포트 | 프로젝트 | 서비스 | 현재 코드 | 적용 |
 |---|---|---|---|---|
-| 8787 | Ubob_Recon | worker `wrangler dev` | 기본값(미명시) | 미적용 |
-| 8788 | JB_Worldcup | `wrangler pages dev` | 기본값(미명시) | 미적용 |
+| 8787 | Ubob_Recon | worker `wrangler dev` | 8787 | **적용** (`worker/wrangler.toml` `[dev]`) |
+| 8788 | JB_Worldcup | `wrangler pages dev` | 8788 | **적용** (`package.json:11` `--port`) |
 
 ### 리스너 없음
 
@@ -84,18 +84,19 @@
 | 포트 | 대상 | 쓰는 곳 |
 |---|---|---|
 | 8100 | MOM_Generator API | `apps/web/src/lib/appConfig.ts:6` (`BACKEND_PORT` 상수) |
-| 8000→8110 | credit-review-assistant API | `apps/web/src/lib/appConfig.ts:10` (`window.location.port` 로 dev 판별) |
+| 8110 | credit-review-assistant API | `apps/web/src/lib/appConfig.ts:7` (`BACKEND_PORT` 상수) |
 | 443 | api.openai.com / api.anthropic.com / api.football-data.org / jbbank.ubob.com | 원격 HTTPS |
 
-> ⚠️ 프론트 포트를 바꾸면 **`appConfig.ts` 의 dev 판별 로직도 같이 고쳐야 한다.** 두 프로젝트 모두
-> "현재 브라우저 포트가 3000/8100이 아니면 dev"라는 식으로 **프론트 포트를 하드코딩해 비교**한다.
-> 포트만 바꾸고 이 로직을 두면 프론트가 API를 못 찾는다.
+> ✅ 두 프로젝트의 `appConfig.ts` 는 이제 **"백엔드 포트가 아니면 dev"** 로 판단한다(프론트 포트를
+> 하드코딩해 비교하지 않는다). 따라서 **프론트 dev 포트는 이 표에서 자유롭게 바꿔도 API 연결이
+> 안 깨진다.** 반대로 **백엔드 포트(8100/8110)를 바꿀 때는 `BACKEND_PORT` 상수도 반드시 같이 고쳐야 한다.**
 
 ## 정리 대상 (죽은 참조)
 
 - `projects/AI_IB_Agent/.claude/settings.local.json` — `8765`, `8768` 허용 항목이 남아 있으나
-  실제 바인딩은 `8767` 뿐. 이력상 8765→8766→8767→8768 로 떠돌았던 잔재.
-- `Project_Manager/README.md:13` — `PORT=3111` 예시. 3111은 어디서도 안 쓴다.
+  실제 바인딩은 `8120` 뿐. 이력상 8765→8766→8767→8768 로 떠돌았던 잔재. (미정리)
+- `Project_Manager/README.md:13` — `PORT=3111` 예시. **이제 동작하지 않는다** — `-p` 플래그가
+  `PORT` 환경변수를 이긴다. 아래 "PORT 환경변수는 더 이상 안 먹는다" 참조. (미정리)
 - `Claude_Manager/docs/issues/*.md` — `4321` 은 헤드리스 검증용 임시 관례이지 앱의 고정 포트가 아니다.
   검증 스크립트 전용으로 계속 쓸 거면 **4321을 "검증 전용"으로 예약**하고 배정표에서 빼둔다.
 
@@ -106,7 +107,15 @@
 - 로컬 전용 도구는 `-H 127.0.0.1` 을 붙인다. 현재 `credit-review-assistant`(Spring `address: 127.0.0.1`)
   와 `AI_IB_Agent`(`launcher.py:34`) 만 루프백에 제대로 묶여 있다.
 - `Project_Manager/README.md:85` 의 "localhost 바인딩을 전제" 서술은 **사실과 다르다** — 실제로는
-  `*:3000` 에 뜬다.
+  `*:3060` 에 뜬다. (미정리)
+
+## PORT 환경변수는 더 이상 안 먹는다
+
+배정은 전부 `next dev -p <포트>` / `wrangler --port` 로 **CLI 플래그에 박았다.** Next.js는
+`-p` 플래그가 `PORT` 환경변수보다 우선하므로, `PORT=9999 npm run dev` 는 **무시된다.**
+일시적으로 다른 포트에 띄우려면 플래그를 직접 주거나(`npm run dev -- -p 9999`) 스크립트를 고친다.
+
+예외: **Ubob_Recon** 은 `process.env.PORT || 3070` 이라 `PORT` 가 계속 동작한다.
 
 ---
 
