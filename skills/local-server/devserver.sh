@@ -98,8 +98,21 @@ cmd_health() {
       code="$(curl -s -o /dev/null -m 3 -w '%{http_code}' "$url" 2>/dev/null)"
       if [ -n "$code" ] && [ "$code" != "000" ]; then
         echo "OK  $url -> HTTP $code"
-        [ "$host" != "localhost" ] && \
-          echo "  주의: localhost 로는 안 붙고 $host 로만 붙었다 (WSL 바인딩 이슈). 코드에 하드코딩된 host 확인."
+        # 서비스가 뜬 게 확인된 뒤에 localhost 를 다시 확인한다.
+        # 폴링 중 단발 실패는 '준비 전'일 뿐이라 바인딩 문제로 단정하면 오판이다.
+        if [ "$host" != "localhost" ]; then
+          local recheck=""
+          for _ in 1 2 3; do
+            recheck="$(curl -s -o /dev/null -m 3 -w '%{http_code}' "http://localhost:${port}${path}" 2>/dev/null)"
+            [ -n "$recheck" ] && [ "$recheck" != "000" ] && break
+            sleep 1
+          done
+          if [ -z "$recheck" ] || [ "$recheck" = "000" ]; then
+            echo "  주의: 서비스는 떴는데 localhost 로는 3회 모두 실패했다 ($host 로만 붙음)."
+            echo "        localhost 해석 확인: getent ahosts localhost"
+            echo "        코드에 하드코딩된 host(127.0.0.1 등)가 있는지 확인할 것."
+          fi
+        fi
         return 0
       fi
     done
