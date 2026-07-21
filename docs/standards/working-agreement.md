@@ -69,6 +69,34 @@
 
 ---
 
+## 규칙 4 — Windows 프로젝트까지 함께 고려한다
+
+**표준·도구·설계를 만들 때 WSL만 보고 끝내지 않는다. Windows 네이티브 프로젝트도 같이 조사한다.**
+
+- 이 사용자는 WSL과 Windows Claude Code를 **상시 병행**한다. Windows 쪽
+  (`/mnt/c/Users/JBB/Desktop/`)에 AI IB Agent 계열 등 주력 프로젝트가 있다.
+- 포트·경로·프로세스 관리처럼 **환경에 종속되는 항목**은 양쪽 실태를 각각 조사해
+  문서에 나란히 싣는다. 한쪽만 담긴 표는 반쪽이 아니라 **틀린 표**다.
+- 도구(스킬·스크립트)는 목적을 공유하고 배선을 분리한다(Claude_Manager 원칙 3).
+  WSL판만 만들었으면 Windows판이 어떻게 되는지 최소한 문서에 적는다.
+- Windows 경로는 **공백·한글**이 흔하므로 항상 인용한다. 프로세스 제어는 PowerShell
+  (`Get-NetTCPConnection`, `Get-CimInstance Win32_Process`, `Start-Process`)을 쓴다.
+
+**왜**: WSL만 보고 만든 표준은 실제로 충돌을 만든다.
+
+> "기본적으로 모든 사항은 windows project도 같이 고려해야 해.
+>  예를 들면 현재 ports.md에는 windows project인 AI IB Agent의 port가 고려되지 않았어."
+
+실제 사고: `ports.md` 초판이 WSL 프로젝트만 담아, Windows `AI_IB_Agent_CA` 프론트가 쓰던
+**3020**을 MOM_Generator에 배정했다. Windows 백엔드 8000·8010은 표에 아예 없었다.
+
+⚠️ **환경 간 포트 충돌은 에러가 나지 않는다.** WSL은 NAT 모드라 네임스페이스가 분리돼 있어
+양쪽이 같은 번호를 잡아도 `EADDRINUSE`가 없다. 대신 Windows가 그 번호를 점유하면
+`localhost:PORT` 가 Windows 쪽으로 가고 **WSL 서비스가 조용히 가려진다.** 같은 환경 내
+충돌보다 발견이 어렵다. → [포트 점유 표준](./ports.md)
+
+---
+
 ## 덧 — 이 규칙들이 부딪힐 때
 
 규칙 1(시킨 것만)과 규칙 2(추측 금지)가 부딪히는 순간이 있다. 시킨 일을 하려는데

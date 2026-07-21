@@ -29,6 +29,30 @@ port_owner() {
   ss -ltnpH 2>/dev/null | awk -v p=":$port$" '$4 ~ p {$1=$1; print}'
 }
 
+# 같은 작업 디렉터리에서 이미 돌고 있는 개발 서버를 찾는다.
+# 두 개가 한 .next/ 를 공유하면 빌드 산출물이 서로 덮어써져 라우트가 깨진다
+# (page.js 는 사라지고 manifest 만 남아 ENOENT). 실제로 밟은 사고다.
+same_dir_servers() {
+  local wd; wd="$(readlink -f "$1")"
+  local p pid cwd cmd
+  for p in /proc/[0-9]*; do
+    pid="${p#/proc/}"
+    [ "$pid" = "$$" ] && continue
+    cwd="$(readlink -f "$p/cwd" 2>/dev/null)" || continue
+    [ "$cwd" = "$wd" ] || continue
+    cmd="$(tr '\0' ' ' < "$p/cmdline" 2>/dev/null)"
+    # 자기 매칭 회피: 이 스크립트 자신과 그것을 부른 셸의 명령줄에도
+    # "next dev …" 문자열이 그대로 들어 있다(pkill -f 와 같은 함정).
+    case "$cmd" in
+      *devserver.sh*|*shell-snapshots*) continue ;;
+    esac
+    case "$cmd" in
+      *next\ dev*|*next-server*|*vite*|*"npm run dev"*|*nodemon*)
+        echo "  pid $pid: $(echo "$cmd" | cut -c1-90)" ;;
+    esac
+  done
+}
+
 cmd_status() {
   local port="${1:?port required}"
   local owner; owner="$(port_owner "$port")"
@@ -59,6 +83,16 @@ cmd_start() {
     echo "port $port 는 이미 사용 중이다. 기동을 중단한다." >&2
     cmd_status "$port" >&2
     echo "→ 남의 서버를 죽이지 말고 다른 포트를 쓰거나, 사용자에게 확인할 것." >&2
+    return 1
+  fi
+
+  local dup; dup="$(same_dir_servers "$workdir")"
+  if [ -n "$dup" ]; then
+    echo "같은 디렉터리에서 이미 개발 서버가 돌고 있다:" >&2
+    echo "$dup" >&2
+    echo "  workdir: $workdir" >&2
+    echo "→ 두 dev 서버가 .next/ 를 공유하면 산출물이 서로 덮어써져 라우트가 깨진다." >&2
+    echo "   포트를 바꿔도 소용없다. 기존 것을 쓰거나, 정리 후 하나만 띄울 것." >&2
     return 1
   fi
 

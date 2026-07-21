@@ -111,6 +111,20 @@ ss -ltnp | grep <port>      # 실제 리스너가 IPv4/IPv6 어디에 붙었는�
 ```
 → Windows 브라우저에서 여는지 확인하려면 Windows쪽 `curl.exe` 로 쏴 본다.
 
+### 같은 디렉터리에서 dev 서버를 두 개 띄우면 `.next` 가 깨진다 ★
+포트가 달라도 소용없다. **`.next/` 는 포트가 아니라 디렉터리에 딸린다.** 두 인스턴스가
+같은 `.next` 에 쓰면 산출물이 서로 덮어써져, `page.js` 는 사라지고 manifest만 남는다:
+
+```text
+Error: ENOENT: no such file or directory,
+  open '.../.next/server/app/browse/[...parts]/page.js'
+```
+
+이 스킬을 만들며 실제로 밟았다 — 다른 세션이 3010에 띄워 둔 서버가 있는데 검증하려고
+같은 `webui/` 에서 3011을 띄웠고, 라우트 하나가 통째로 깨졌다.
+→ `start` 가 이제 **같은 workdir에서 도는 개발 서버를 감지해 기동을 거부**한다.
+→ 복구: 해당 디렉터리의 dev 서버를 **전부 정리 → `rm -rf .next` → 하나만 재기동**.
+
 ### `npm run start` 가 옛 빌드를 서빙한다
 소스를 고치고 `npm run start` 하면 **이전 빌드가 그대로 뜬다.** 반드시 `npm run build` 를 먼저.
 반대로 dev 서버가 떠 있는 상태에서 `npm run build` 를 돌리면 `.next` 가 깨진다.
