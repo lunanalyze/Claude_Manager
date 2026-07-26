@@ -37,7 +37,10 @@ description: 커밋·푸시·배포 직전 게이트. 빌드 통과 확인 → �
 ## 표준 절차
 
 ```bash
-G=/home/raspvery/Claude_Manager/skills/ship-guard/scan.py
+# 스킬이 설치된 심링크를 풀어 repo 안의 실제 경로를 잡는다.
+# 환경마다 repo 위치가 다르므로(WSL `~/Claude_Manager`, orca `~/storage/Claude_Manager`)
+# 절대경로를 박지 않는다 — Claude_Manager 원칙 3(환경 중립 코어).
+G="$(readlink -f ~/.claude/skills/ship-guard)/scan.py"
 
 # 1) 빌드 게이트 — 깨진 걸 커밋하지 않는다 (프로젝트 타입에 맞게)
 npx tsc --noEmit && npm run build      # Next.js / TypeScript

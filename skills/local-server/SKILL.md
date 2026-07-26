@@ -44,13 +44,17 @@ description: 로컬 개발 서버를 안전하게 띄우고·확인하고·정�
 ## 표준 절차
 
 ```bash
-S=/home/raspvery/Claude_Manager/skills/local-server/devserver.sh
+# 스킬이 설치된 심링크를 풀어 repo 안의 실제 경로를 잡는다.
+# 환경마다 repo 위치가 다르므로(WSL `~/Claude_Manager`, orca `~/storage/Claude_Manager`)
+# 절대경로를 박지 않는다 — Claude_Manager 원칙 3(환경 중립 코어).
+S="$(readlink -f ~/.claude/skills/local-server)/devserver.sh"
+R="$(cd "$(dirname "$S")/../.." && pwd)"   # Claude_Manager repo 루트
 
 # 0) 포트 주인 확인 — 남이 쓰고 있으면 죽이지 말고 다른 번호로
 "$S" status 3010
 
 # 1) 기동 (detached + 로그)
-"$S" start 3010 /home/raspvery/Claude_Manager/webui "npm run dev -- -p 3010"
+"$S" start 3010 "$R/webui" "npm run dev -- -p 3010"
 
 # 2) 헬스체크 — 200이 나올 때까지 폴링, 실패 시 로그 꼬리를 보여줌
 "$S" health 3010 /

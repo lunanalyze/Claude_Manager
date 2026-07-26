@@ -15,7 +15,12 @@
 
 set -uo pipefail
 
-RUN_DIR="${LOCAL_SERVER_RUN_DIR:-/home/raspvery/Claude_Manager/local/logs}"
+# repo 루트는 이 스크립트의 실제 위치에서 구한다(환경마다 repo 경로가 다르다).
+# ~/.claude/skills/ 심링크를 통해 실행될 수 있으므로 readlink -f 로 반드시 해소한다 —
+# 해소하지 않으면 ~/.claude 를 repo 루트로 착각한다.
+_SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+_REPO_ROOT="$(cd "$(dirname "$_SELF")/../.." && pwd)"
+RUN_DIR="${LOCAL_SERVER_RUN_DIR:-$_REPO_ROOT/local/logs}"
 mkdir -p "$RUN_DIR"
 
 log_file()  { echo "$RUN_DIR/$1.log"; }
