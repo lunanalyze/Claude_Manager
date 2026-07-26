@@ -1,5 +1,6 @@
 {
   "theme": "violet",
+  "type": "compact",
   "radius": "subtle",
   "density": "compact",
   "button": "solid",
@@ -63,6 +64,5 @@
   "spinner": "dots",
   "emptystate": "bordered",
   "notif": "pill",
-  "chart": "gradient",
-  "type": "compact"
+  "chart": "gradient"
 }
