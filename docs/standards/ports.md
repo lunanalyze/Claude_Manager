@@ -51,8 +51,10 @@ powershell.exe -NoProfile -Command "Get-NetTCPConnection -State Listen |
 | `3010–3099` | **WSL** | 프론트엔드 dev 서버 (Next.js / Vite) |
 | `3100–3199` | **WSL** | 프론트엔드 — 기존 배정 유지분 |
 | `3200–3299` | **Windows** | 프론트엔드 dev 서버 |
+| `3300–3399` | **orca-server** | 프론트엔드 — **orca 전용 신규 서비스만** (사본은 원본 번호 유지) |
 | `8100–8199` | **WSL** | 백엔드 API (Spring Boot / FastAPI) |
 | `8200–8299` | **Windows** | 백엔드 API (Spring Boot / FastAPI) |
+| `8300–8399` | **orca-server** | 백엔드 API — **orca 전용 신규 서비스만** |
 | `8780–8799` | WSL | Cloudflare wrangler 로컬 (`wrangler dev`, `pages dev`) |
 | 예약 | — | `5173`(Vite 기본), `1234`(LM Studio), `11434`(Ollama), `5432`/`3306`/`27017`(DB 기본) — 배정 금지 |
 
@@ -81,7 +83,7 @@ powershell.exe -NoProfile -Command "Get-NetTCPConnection -State Listen |
 |---|---|---|---|---|---|
 | 8100 | MOM_Generator | Spring Boot (Java 8) | 8100 | **적용** | `apps/api/.../application.yml:8` |
 | 8110 | credit-review-assistant | Spring Boot | 8110 | **적용** | `apps/api/.../application.yml:3` |
-| 8120 | projects/AI_IB_Agent | FastAPI + uvicorn | 8120 | **적용** | `launcher.py:35` |
+| ~~8120~~ | ~~projects/AI_IB_Agent~~ | 2026-07-27 폴더 삭제 — **8120 해제** | — | — | — |
 
 ### Cloudflare wrangler 로컬
 
@@ -90,9 +92,46 @@ powershell.exe -NoProfile -Command "Get-NetTCPConnection -State Listen |
 | 8787 | Ubob_Recon | worker `wrangler dev` | 8787 | **적용** (`worker/wrangler.toml` `[dev]`) |
 | 8788 | JB_Worldcup | `wrangler pages dev` | 8788 | **적용** (`package.json:11` `--port`) |
 
-### 리스너 없음
+---
 
-- **JB_Competition_Reviewer** — 정적 HTML 한 개(`review/FinAI_망분리_리뷰.html`). 서버 없음.
+## 배정표 — orca-server (노트북 WSL, `moon@orca-server`)
+
+세 번째 환경. Tailscale로 SSH 접속하며(`ssh orca`), 프로젝트는 외장 SSD
+`/mnt/wsl/data`(= `~/storage`)에 있다. → [orca 접속·스토리지 구성](../../CLAUDE.md)
+
+### ⚠️ 여기는 **다른 물리 머신**이라 규칙이 다르다
+
+기본 규칙 5("번호는 환경을 넘어 유일해야 한다")는 **WSL과 Windows가 한 PC의 `localhost`를
+공유하기 때문**에 생긴 규칙이다. orca-server는 별도 노트북이므로 그 이유가 성립하지 않는다.
+**desktop과 같은 번호를 써도 충돌하지 않는다.**
+
+그래서 **orca에 있는 사본 프로젝트는 desktop과 같은 포트를 그대로 쓴다.** 같은 git 저장소의
+같은 코드이므로, 여기서만 번호를 바꾸면 **양쪽 코드가 영구히 갈라진다.** 그게 충돌보다 나쁘다.
+
+| 프로젝트 (orca 사본) | 포트 | desktop과 동일 |
+|---|---|---|
+| Claude_Manager webui · MOM_Generator · credit-review-assistant · JB_Worldcup · literacy · Project_Manager · Ubob_Recon · AI_Compliance | 3010 · 3020 · 3030 · 3040 · 3050 · 3060 · 3070 · 3100 | ✅ 그대로 |
+
+### 대신 조심할 것 — SSH 포트 포워딩
+
+같은 번호라서 실제로 부딪히는 곳은 **터널링할 때 클라이언트 쪽**이다. desktop에서 3010이 이미
+떠 있는데 orca의 3010을 같은 번호로 당기면 그때 충돌한다. **터널 로컬 포트에만 `1` 을 앞에 붙인다**
+— 코드는 건드리지 않는다.
+
+```bash
+ssh -N -L 13010:localhost:3010 orca    # orca의 3010 → 내 13010
+```
+
+### orca 전용 신규 서비스
+
+desktop에 대응이 없는 **orca에서만 도는 서비스**가 생기면 아래 대역에서 배정한다.
+
+| 대역 | 용도 |
+|---|---|
+| `3300–3399` | orca 전용 프론트엔드 |
+| `8300–8399` | orca 전용 백엔드 API |
+
+현재 배정 없음.
 
 ---
 
@@ -216,8 +255,8 @@ Windows 쪽 변경은 **각 프로젝트 repo에서** 해야 한다. WSL 세션�
 
 ## 정리 대상 (죽은 참조)
 
-- `projects/AI_IB_Agent/.claude/settings.local.json` — `8765`, `8768` 허용 항목이 남아 있으나
-  실제 바인딩은 `8120` 뿐. 이력상 8765→8766→8767→8768 로 떠돌았던 잔재. (미정리)
+- ~~`projects/AI_IB_Agent/.claude/settings.local.json`~~ — **해소됨(2026-07-27).** 폴더 자체를
+  삭제했다. WSL에는 이제 이 계보가 없고, Windows `AI IB Agent` 만 남는다.
 - `Project_Manager/README.md:13` — `PORT=3111` 예시. **이제 동작하지 않는다** — `-p` 플래그가
   `PORT` 환경변수를 이긴다. 아래 "PORT 환경변수는 더 이상 안 먹는다" 참조. (미정리)
 - `Claude_Manager/docs/issues/*.md` — `4321` 은 헤드리스 검증용 임시 관례이지 앱의 고정 포트가 아니다.
@@ -227,8 +266,9 @@ Windows 쪽 변경은 **각 프로젝트 repo에서** 해야 한다. WSL 세션�
 
 - `next dev` 는 `-H` 없이 실행하면 **`0.0.0.0`(전 인터페이스)** 에 바인딩된다. WSL에서는 Windows
   호스트 및 동일 네트워크에서 접근 가능해진다.
-- 로컬 전용 도구는 `-H 127.0.0.1` 을 붙인다. 현재 `credit-review-assistant`(Spring `address: 127.0.0.1`)
-  와 `AI_IB_Agent`(`launcher.py:34`) 만 루프백에 제대로 묶여 있다.
+- 로컬 전용 도구는 `-H 127.0.0.1` 을 붙인다. WSL에서 루프백에 제대로 묶여 있는 것은 이제
+  `credit-review-assistant`(Spring `address: 127.0.0.1`) **하나뿐**이다
+  (`projects/AI_IB_Agent` 는 2026-07-27 삭제).
 - `Project_Manager/README.md:85` 의 "localhost 바인딩을 전제" 서술은 **사실과 다르다** — 실제로는
   `*:3060` 에 뜬다. (미정리)
 
