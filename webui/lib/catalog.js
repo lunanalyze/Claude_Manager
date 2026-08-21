@@ -156,7 +156,7 @@ export function readFileSafe(abs) {
 
 const SHARED_SPACES = [
   { root: "repo", rel: "docs/standards", kind: "dir", icon: "📐", title: "표준 문서", share: "git",
-    desc: "기술 스택·UI 등 모든 프로젝트가 따르는 공유 표준. 각 환경 CLAUDE.md가 @import 해 컨텍스트에 싣는다." },
+    desc: "작업 규칙·기술 스택·UI·포트 등 모든 프로젝트가 따르는 공유 표준. 각 환경 CLAUDE.md가 @import 해 컨텍스트에 싣는다." },
   { root: "repo", rel: "docs/references", kind: "dir", icon: "📎", title: "참고자료", share: "git",
     desc: "CLAUDE.md에 링크로 거는 참고 문서(UI 참고 등). 무거운 자료는 @import 대신 링크로 걸어 컨텍스트를 아낀다." },
   { root: "repo", rel: "docs/issues", kind: "dir", icon: "🐛", title: "이슈 로그", share: "git",

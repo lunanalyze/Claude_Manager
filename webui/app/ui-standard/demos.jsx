@@ -29,7 +29,7 @@ export function DemoInput({ variant }) {
   return (
     <div className="wi-field demo-full">
       <label>이메일</label>
-      <input className={`wi inp-${variant}`} placeholder="you@example.com" defaultValue="lunanalyze@gmail.com" />
+      <input className={`wi inp-${variant}`} placeholder="you@example.com" defaultValue="hong@example.com" />
     </div>
   );
 }

@@ -1,9 +1,15 @@
 <!doctype html>
 <!--
-  project-map — 자립형 아키텍처 시각화 (외부 의존 0).
-  이 파일을 복사해 {{...}} 자리표시자와 <!-- INJECT: ... --> 구역을 실제 스캔 결과로 채운다.
-  규칙: pm-title = 자연어(사람이 읽는 이름), pm-sub = 식별자(경로·심볼) 보조, pm-desc = 한 줄 목적.
-  계층 노드가 없으면 그 <section>은 통째로 지운다. 있는 계층만 남긴다.
+  project-map — 자립형 아키텍처 플로우차트 (외부 의존 0). {{...}}·INJECT 를 실제 스캔 결과로 채운다.
+
+  ★ 위치는 JS가 흐름(그래프 깊이)으로 자동 배치. 노드를 카테고리별로 줄 세우지 마라.
+  ● 노드: #pm-graph 안에 <article class="pm-node" id="..." data-cat="entry|endpoint|engine|data|external">
+      를 순서 무관 flat 하게. 고유 id 필수. 내용 = pm-cat + pm-title(자연어) + pm-sub(식별자) + pm-desc(목적).
+  ● 엣지: 하단 EDGES 에 [출발id,도착id] 실제 관계. JS가 깊이 계산→좌우 배치, 모든 엣지는 오른쪽으로 흐름.
+  ● 기능: 하단 FEATURES 에 {id,name,nodes:[...]} 로 "프로젝트에서 할 수 있는 기능"을 전부 나열.
+      nodes = 그 기능을 쓸 때 거치는 흐름의 노드 id 들(진입 화면→…→데이터/외부). 칩 클릭 시 그 경로만 강조.
+  ● 상호작용: 노드 클릭=연결된 앞뒤 이웃 강조, 기능 칩 클릭=그 기능 흐름 강조(강조 엣지는 카드 위로).
+  ● 흐름 밖 독립 항목(설정 등, 엣지 없음)은 pm-aux 에. 배경 light 고정. 크게 그려도 zoom/pan 으로 봄.
 -->
 <html lang="ko">
 <head>
@@ -12,55 +18,99 @@
 <title>{{PROJECT_NAME}} · 프로젝트 맵</title>
 <style>
   :root{
+    color-scheme:light;
     --bg:#f6f7f9; --panel:#fff; --border:#e4e7ee; --text:#1f2733; --muted:#667085; --code:#f1f3f7;
+    --edge:#9aa4b2; --hl:#0f172a;
     --entry:#2563eb; --endpoint:#7c3aed; --engine:#0d9488; --data:#d97706; --external:#e11d48; --job:#475569;
-    --radius:.5rem;
+    --radius:.6rem;
   }
-  @media (prefers-color-scheme:dark){:root{
-    --bg:#0f1115; --panel:#161a22; --border:#262b36; --text:#d7dce4; --muted:#8a93a3; --code:#11141a;
-    --entry:#60a5fa; --endpoint:#a78bfa; --engine:#2dd4bf; --data:#fbbf24; --external:#fb7185; --job:#94a3b8;
-  }}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);
-    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;line-height:1.6}
-  .pm{max-width:1100px;margin:0 auto;padding:32px 24px 56px}
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;line-height:1.55}
+  .pm{max-width:1160px;margin:0 auto;padding:32px 24px 56px}
   .pm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .pm-head h1{font-size:1.8rem;margin:0 0 4px}
   .pm-sub2{color:var(--muted);font-size:13px;margin:0}
   .pm-badge{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;
-    background:color-mix(in srgb,var(--endpoint) 16%,transparent);color:var(--endpoint)}
+    background:color-mix(in srgb,var(--endpoint) 16%,#fff);color:var(--endpoint)}
 
   .pm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 8px}
   .pm-stat{border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);background:var(--panel);padding:13px 15px}
   .pm-stat b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
   .pm-stat span{font-size:12px;color:var(--muted)}
 
-  .pm-flow{display:flex;flex-direction:column;margin-top:14px}
-  .pm-layer{border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);background:var(--panel);
-    padding:14px 16px;border-left:4px solid var(--lc,var(--muted))}
-  .pm-layer[data-layer=entry]{--lc:var(--entry)}
-  .pm-layer[data-layer=endpoint]{--lc:var(--endpoint)}
-  .pm-layer[data-layer=engine]{--lc:var(--engine)}
-  .pm-layer[data-layer=data]{--lc:var(--data)}
-  .pm-layer[data-layer=external]{--lc:var(--external)}
-  .pm-layer[data-layer=job]{--lc:var(--job)}
-  .pm-layer-label{font-weight:700;font-size:13px;margin-bottom:11px;color:var(--lc,var(--text));
-    display:flex;align-items:baseline;gap:8px}
-  .pm-layer-label em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-  .pm-nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-  .pm-node{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);padding:11px 13px}
+  /* 기능 칩 바 */
+  .pm-features{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px}
+  .pm-features .lbl{font-size:12px;font-weight:700;color:var(--muted);margin-right:2px}
+  .pm-chip{font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid var(--border);
+    background:var(--panel);color:var(--text);cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+  .pm-chip:hover{border-color:color-mix(in srgb,var(--endpoint) 45%,var(--border));background:var(--code)}
+  .pm-chip.on{background:color-mix(in srgb,var(--endpoint) 14%,#fff);
+    border-color:color-mix(in srgb,var(--endpoint) 45%,transparent);color:var(--endpoint);font-weight:700}
+  .pm-featcap{margin-top:9px;font-size:12.5px;color:var(--muted);padding:8px 12px;
+    border:1px solid var(--border);border-left:3px solid var(--endpoint);border-radius:8px;background:var(--panel)}
+  .pm-featcap b{color:var(--text);font-weight:700}
+
+  .pm-viewport{position:relative;height:78vh;min-height:520px;margin-top:12px;overflow:hidden;
+    border:1px solid var(--border);border-radius:calc(var(--radius) + 3px);background:
+    radial-gradient(circle, color-mix(in srgb,var(--border) 55%,transparent) 1px, transparent 1px) 0 0/22px 22px,
+    var(--panel);cursor:grab;touch-action:none;
+    user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .pm-viewport.grabbing{cursor:grabbing}
+  .pm-canvas{transform-origin:0 0;will-change:transform;width:max-content}
+
+  .pm-zoom{position:absolute;right:12px;bottom:12px;z-index:8;display:flex;flex-direction:column;gap:6px}
+  .pm-zoom button{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);background:var(--panel);border-radius:9px;font-size:17px;line-height:1;
+    cursor:pointer;color:var(--text);box-shadow:0 2px 6px rgba(15,23,42,.12)}
+  .pm-zoom button:hover{background:var(--code)}
+  .pm-zoom .pm-zval{font-size:10.5px;font-weight:700;color:var(--muted);text-align:center;
+    background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:3px 0}
+  .pm-hint{position:absolute;left:12px;bottom:12px;z-index:8;font-size:11px;color:var(--muted);
+    background:color-mix(in srgb,var(--panel) 82%,transparent);padding:4px 9px;border-radius:7px;border:1px solid var(--border)}
+
+  .pm-graph{position:relative;display:flex;flex-direction:row;align-items:center;gap:148px;padding:44px 52px}
+  #pm-edges,#pm-edges-top,#pm-labels{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  #pm-edges{z-index:0}
+  #pm-edges-top{z-index:0} /* 하이라이트 엣지는 노드 아래(노드 위로 오지 않게) */
+  #pm-labels{z-index:0}   /* 엣지 라벨도 노드 아래 — 라벨만 클릭 가능(pointer-events) */
+  #pm-edges path{fill:none;stroke-width:1.7;transition:opacity .15s}  /* 선 색은 출발 계층별로 인라인 지정 */
+  #pm-edges.dim path{opacity:.09}
+  #pm-edges-top path{fill:none;stroke:var(--hl);stroke-width:2.8}
+  /* 항상 보이는 클릭형 엣지 라벨 (테두리 색 = 그 엣지 색) */
+  .pm-elabel{pointer-events:auto;cursor:pointer}
+  .pm-elabel .pm-el-bg{fill:var(--panel);stroke-width:1.4;transition:opacity .15s}
+  .pm-elabel .pm-el-t{fill:var(--text);font-size:10.5px;font-weight:600;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;transition:opacity .15s}
+  .pm-elabel:hover .pm-el-bg{filter:brightness(.96)}
+  #pm-labels.dim .pm-elabel:not(.on){opacity:.2}
+  .pm-elabel.on .pm-el-bg{stroke-width:2.4}
+  .pm-elabel.on .pm-el-t{font-weight:700}
+  .pm-col{display:flex;flex-direction:column;justify-content:center;gap:22px}
+  .pm-node{position:relative;z-index:1;width:250px;background:var(--panel);cursor:pointer;
+    border:1px solid var(--border);border-top:3px solid var(--lc,var(--muted));
+    border-radius:var(--radius);padding:12px 15px;box-shadow:0 2px 8px rgba(15,23,42,.07);
+    transition:opacity .15s,box-shadow .15s,filter .15s}
+  .pm-node[data-cat=entry]{--lc:var(--entry)}
+  .pm-node[data-cat=endpoint]{--lc:var(--endpoint)}
+  .pm-node[data-cat=engine]{--lc:var(--engine)}
+  .pm-node[data-cat=data]{--lc:var(--data)}
+  .pm-node[data-cat=external]{--lc:var(--external)}
+  .pm-node[data-cat=job]{--lc:var(--job)}
+  .pm-node.dim{opacity:.2;filter:saturate(.4)}
+  .pm-node.hl{box-shadow:0 0 0 2px var(--lc),0 6px 16px rgba(15,23,42,.18);z-index:2}
+  .pm-cat{display:inline-block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--lc,var(--muted));margin-bottom:3px}
   .pm-title{font-weight:600;font-size:13.5px}
   .pm-sub{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--muted);
-    margin:3px 0;word-break:break-all}
+    margin:4px 0;word-break:break-all}
   .pm-desc{font-size:12.5px;color:var(--muted)}
 
-  .pm-conn{align-self:center;width:2px;height:20px;background:var(--border)}
-  .pm-conn::after{content:"▼";display:block;text-align:center;color:var(--border);font-size:10px;margin-top:16px}
-
-  .pm-aux{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .pm-aux{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+  .pm-aux .pm-node{width:100%;cursor:default}
   @media(max-width:760px){.pm-aux{grid-template-columns:1fr}.pm-stats{grid-template-columns:repeat(2,1fr)}}
 
-  .pm-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:24px;font-size:12px;color:var(--muted)}
+  .pm-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:22px;font-size:12px;color:var(--muted)}
   .pm-legend span{display:inline-flex;align-items:center;gap:6px}
   .pm-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
   .pm-foot{margin-top:20px;font-size:12px;color:var(--muted)}
@@ -74,99 +124,81 @@
       <h1>{{PROJECT_NAME}}</h1>
       <p class="pm-sub2">{{STACK}} · 스캔 {{SCANNED_AT}}</p>
     </div>
-    <div class="pm-badge">동작 구조 맵</div>
+    <div class="pm-badge">동작 구조 플로우차트</div>
   </header>
 
   <div class="pm-stats">
-    <!-- INJECT:stats — 실제 수치로 채우고 필요 타일만 남긴다 -->
+    <!-- INJECT:stats -->
     <div class="pm-stat"><b>{{FILE_COUNT}}</b><span>스캔한 파일</span></div>
     <div class="pm-stat"><b>{{ENDPOINT_COUNT}}</b><span>엔드포인트</span></div>
     <div class="pm-stat"><b>{{ENGINE_COUNT}}</b><span>엔진(핵심 모듈)</span></div>
     <div class="pm-stat"><b>{{EXTERNAL_COUNT}}</b><span>외부 연동</span></div>
   </div>
 
-  <div class="pm-flow">
-    <!-- 각 계층: 노드가 있으면 남기고, 없으면 section+뒤 pm-conn 삭제.
-         노드 예시 하나만 남겨두니 실제 노드로 교체/증식할 것. -->
+  <div class="pm-features">
+    <span class="lbl">기능 흐름:</span>
+    <div id="pm-feat-list" style="display:contents"></div>
+  </div>
+  <div class="pm-featcap" id="pm-feat-cap" hidden></div>
 
-    <section class="pm-layer" data-layer="entry">
-      <div class="pm-layer-label">진입점 <em>Entry</em></div>
-      <div class="pm-nodes">
-        <!-- INJECT:entry -->
-        <article class="pm-node">
+  <div class="pm-viewport" id="pm-viewport">
+    <div class="pm-canvas" id="pm-canvas">
+      <div class="pm-graph" id="pm-graph">
+        <svg id="pm-edges" aria-hidden="true"></svg>
+        <svg id="pm-edges-top" aria-hidden="true"></svg>
+        <svg id="pm-labels"></svg>
+        <!-- INJECT:nodes — flat 나열, id·data-cat 필수. 배치는 JS가 EDGES 로 자동. -->
+        <article class="pm-node" id="n-entry" data-cat="entry">
+          <span class="pm-cat">Entry</span>
           <div class="pm-title">서버 부트스트랩</div>
           <div class="pm-sub">src/index.ts · main()</div>
           <div class="pm-desc">앱을 초기화하고 HTTP 서버를 띄운다.</div>
         </article>
-      </div>
-    </section>
-    <div class="pm-conn"></div>
-
-    <section class="pm-layer" data-layer="endpoint">
-      <div class="pm-layer-label">엔드포인트 <em>Endpoints</em></div>
-      <div class="pm-nodes">
-        <!-- INJECT:endpoint -->
-        <article class="pm-node">
+        <article class="pm-node" id="n-ep-orders" data-cat="endpoint">
+          <span class="pm-cat">Endpoint</span>
           <div class="pm-title">주문 생성 API</div>
           <div class="pm-sub">POST /orders · routes/orders.ts</div>
           <div class="pm-desc">새 주문을 받아 검증 후 저장 요청.</div>
         </article>
-      </div>
-    </section>
-    <div class="pm-conn"></div>
-
-    <section class="pm-layer" data-layer="engine">
-      <div class="pm-layer-label">엔진 (핵심 로직) <em>Engines</em></div>
-      <div class="pm-nodes">
-        <!-- INJECT:engine -->
-        <article class="pm-node">
+        <article class="pm-node" id="n-eng-order" data-cat="engine">
+          <span class="pm-cat">Engine</span>
           <div class="pm-title">주문 처리 로직</div>
           <div class="pm-sub">services/orderService.ts</div>
           <div class="pm-desc">재고 확인·가격 계산·상태 전이를 담당.</div>
         </article>
-      </div>
-    </section>
-    <div class="pm-conn"></div>
-
-    <section class="pm-layer" data-layer="data">
-      <div class="pm-layer-label">데이터 · 저장 <em>Data</em></div>
-      <div class="pm-nodes">
-        <!-- INJECT:data -->
-        <article class="pm-node">
+        <article class="pm-node" id="n-data-orders" data-cat="data">
+          <span class="pm-cat">Data</span>
           <div class="pm-title">주문 저장소</div>
           <div class="pm-sub">db/orders (PostgreSQL)</div>
           <div class="pm-desc">주문 레코드 영속화.</div>
         </article>
-      </div>
-    </section>
-    <div class="pm-conn"></div>
-
-    <section class="pm-layer" data-layer="external">
-      <div class="pm-layer-label">외부 연동 <em>External</em></div>
-      <div class="pm-nodes">
-        <!-- INJECT:external -->
-        <article class="pm-node">
+        <article class="pm-node" id="n-ext-stripe" data-cat="external">
+          <span class="pm-cat">External</span>
           <div class="pm-title">결제 게이트웨이</div>
           <div class="pm-sub">lib/stripe.ts</div>
           <div class="pm-desc">Stripe로 결제 승인 요청.</div>
         </article>
       </div>
-    </section>
+    </div>
+
+    <div class="pm-zoom">
+      <button type="button" id="pm-zin" title="확대" aria-label="확대">＋</button>
+      <div class="pm-zval" id="pm-zval">100%</div>
+      <button type="button" id="pm-zout" title="축소" aria-label="축소">－</button>
+      <button type="button" id="pm-zfit" title="전체 맞춤" aria-label="전체 맞춤">⤢</button>
+    </div>
+    <div class="pm-hint">노드·기능·엣지 라벨 클릭: 관련 흐름만 강조 · 드래그 이동 · 휠 확대/축소</div>
   </div>
 
-  <!-- 있을 때만: 백그라운드·스케줄 / 설정·빌드 -->
+  <!-- 있을 때만: 흐름 밖 독립 항목. 엣지 없음. -->
   <div class="pm-aux">
-    <!-- INJECT:aux — 없으면 이 블록 삭제 -->
-    <section class="pm-layer" data-layer="job">
-      <div class="pm-layer-label">백그라운드 · 스케줄 <em>Jobs</em></div>
-      <div class="pm-nodes">
-        <article class="pm-node">
-          <div class="pm-title">일일 정산 배치</div>
-          <div class="pm-sub">jobs/settle.ts · cron 0 2 * * *</div>
-          <div class="pm-desc">매일 새벽 정산 집계.</div>
-        </article>
-      </div>
-    </section>
+    <!-- INJECT:aux — 없으면 삭제 -->
+    <article class="pm-node" data-cat="job">
+      <span class="pm-cat">Config</span>
+      <div class="pm-title">빌드·환경 설정</div>
+      <div class="pm-sub">package.json · tsconfig.json</div>
+      <div class="pm-desc">빌드 스크립트·설정.</div>
+    </article>
   </div>
 
   <div class="pm-legend">
@@ -175,11 +207,237 @@
     <span><i style="background:var(--engine)"></i>엔진</span>
     <span><i style="background:var(--data)"></i>데이터</span>
     <span><i style="background:var(--external)"></i>외부</span>
-    <span><i style="background:var(--job)"></i>백그라운드</span>
+    <span><i style="background:var(--job)"></i>설정</span>
   </div>
   <footer class="pm-foot">
     재생성: <code>/project-map</code> · 이 파일은 자립형이며 프로젝트에 함께 커밋된다(Project_Manager가 조회).
   </footer>
 </div>
+
+<script>
+/* 엣지 — [출발id,도착id] 또는 [출발id,도착id,"설명"]. 설명은 그 엣지가 활성(강조)될 때
+   엣지 위에 라벨로 뜬다(선택). JS가 깊이 계산해 좌→우 배치. */
+var EDGES = [
+  ["n-entry","n-ep-orders","route"],
+  ["n-ep-orders","n-eng-order","createOrder()"],
+  ["n-eng-order","n-data-orders","save"],
+  ["n-eng-order","n-ext-stripe","charge"]
+];
+/* 기능 — 프로젝트에서 할 수 있는 기능 전부. nodes = 그 기능이 거치는 흐름 경로의 노드 id 들.
+   desc = 그 기능이 하는 일 한 줄 설명(칩 클릭 시 흐름도 위에 캡션으로 뜸). */
+var FEATURES = [
+  {id:"f-order", name:"주문 생성", desc:"장바구니를 주문으로 만들고 결제까지 처리하는 흐름.", nodes:["n-entry","n-ep-orders","n-eng-order","n-data-orders","n-ext-stripe"]}
+];
+
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var viewport=document.getElementById('pm-viewport');
+  var canvas=document.getElementById('pm-canvas');
+  var graph=document.getElementById('pm-graph');
+  var svg=document.getElementById('pm-edges');
+  var topSvg=document.getElementById('pm-edges-top');
+  var labSvg=document.getElementById('pm-labels');
+  var zval=document.getElementById('pm-zval');
+  var featList=document.getElementById('pm-feat-list');
+  var st={scale:1,tx:0,ty:0,min:0.15,max:2.5};
+  var built=false, ADJ={out:{},pre:{}}, focusRef=null, topList=[], activeKeys=null;
+  var EDGE_COL='#111827';   // 엣지는 전부 검정
+  function catColor(id){ return EDGE_COL; }
+  function catKey(id){ return 'def'; }
+
+  function byId(id){ return document.getElementById(id); }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  function apply(){ canvas.style.transform='translate('+st.tx+'px,'+st.ty+'px) scale('+st.scale+')';
+    if(zval) zval.textContent=Math.round(st.scale*100)+'%'; }
+  function zoomAround(f,cx,cy){ var ns=clamp(st.scale*f,st.min,st.max);
+    st.tx=cx-(cx-st.tx)*(ns/st.scale); st.ty=cy-(cy-st.ty)*(ns/st.scale); st.scale=ns; apply(); }
+  function fit(){ var W=graph.offsetWidth,H=graph.offsetHeight,vw=viewport.clientWidth,vh=viewport.clientHeight;
+    var s=clamp(Math.min((vw-32)/W,(vh-32)/H),st.min,st.max);
+    st.scale=s; st.tx=Math.max(16,(vw-W*s)/2); st.ty=Math.max(16,(vh-H*s)/2); apply(); }
+
+  /* 흐름 기반 자동 배치 */
+  function build(){
+    if(built) return; built=true;
+    var nodes=[].slice.call(graph.querySelectorAll('.pm-node'));
+    var idx={}; nodes.forEach(function(n,i){ idx[n.id]=i; });
+    var out={},pre={},indeg={};
+    nodes.forEach(function(n){ out[n.id]=[];pre[n.id]=[];indeg[n.id]=0; });
+    EDGES.forEach(function(e){ if(out[e[0]]&&(e[1] in indeg)&&e[0]!==e[1]){ out[e[0]].push(e[1]); pre[e[1]].push(e[0]); indeg[e[1]]++; } });
+    ADJ.out=out; ADJ.pre=pre;
+    var depth={},din={};
+    nodes.forEach(function(n){ depth[n.id]=0; din[n.id]=indeg[n.id]; });
+    var q=nodes.filter(function(n){ return din[n.id]===0; }).map(function(n){ return n.id; });
+    var seen={};
+    while(q.length){ var u=q.shift(); seen[u]=1;
+      out[u].forEach(function(v){ if(depth[u]+1>depth[v]) depth[v]=depth[u]+1; if(--din[v]===0) q.push(v); }); }
+    nodes.forEach(function(n){ if(!seen[n.id]) depth[n.id]=depth[n.id]||0; });
+    var maxD=0; nodes.forEach(function(n){ if(depth[n.id]>maxD) maxD=depth[n.id]; });
+    var CATO={entry:0,endpoint:1,engine:2,data:3,external:4,job:5};
+    var cols=[]; for(var d=0; d<=maxD; d++) cols[d]=[];
+    nodes.forEach(function(n){ cols[depth[n.id]].push(n.id); });
+    cols.forEach(function(c){ c.sort(function(a,b){
+      var ca=(CATO[nodes[idx[a]].dataset.cat]||9),cb=(CATO[nodes[idx[b]].dataset.cat]||9); return ca-cb||idx[a]-idx[b]; }); });
+    function pos(col){ var m={}; col.forEach(function(id,i){ m[id]=i; }); return m; }
+    function avg(list,p,fb){ var s=0,c=0; for(var i=0;i<list.length;i++){ if(list[i] in p){ s+=p[list[i]]; c++; } } return c?s/c:fb; }
+    function bary(dir){ var s=dir>0?1:maxD-1,e=dir>0?maxD+1:-1;
+      for(var d=s; d!==e; d+=dir){ if(d<0||d>maxD) continue; var adj=dir>0?cols[d-1]:cols[d+1]; if(!adj) continue;
+        var p=pos(adj),neigh=dir>0?pre:out,cur=pos(cols[d]);
+        cols[d].sort(function(a,b){ return avg(neigh[a],p,cur[a])-avg(neigh[b],p,cur[b]); }); } }
+    for(var k=0;k<3;k++) bary(1);
+    for(var k2=0;k2<2;k2++) bary(-1);
+    nodes.forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
+    for(var d2=0; d2<=maxD; d2++){ var col=document.createElement('div'); col.className='pm-col';
+      cols[d2].forEach(function(id){ col.appendChild(nodes[idx[id]]); }); graph.appendChild(col); }
+  }
+
+  function edgeGeom(a,b){
+    var s=st.scale||1, gb=graph.getBoundingClientRect();
+    var ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+    var ax=(ra.right-gb.left)/s, ay=(ra.top-gb.top)/s+(ra.height/s)/2;
+    var bx=(rb.left-gb.left)/s, by=(rb.top-gb.top)/s+(rb.height/s)/2;
+    if(bx<ax+6) bx=ax+6;
+    var dx=Math.max(30,(bx-ax)*0.5);
+    return 'M'+ax+' '+ay+' C'+(ax+dx)+' '+ay+' '+(bx-dx)+' '+by+' '+bx+' '+by;
+  }
+  function drawEdges(){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var vb='0 0 '+graph.offsetWidth+' '+graph.offsetHeight;
+    svg.setAttribute('viewBox',vb); topSvg.setAttribute('viewBox',vb); labSvg.setAttribute('viewBox',vb);
+    EDGES.forEach(function(e){ var a=byId(e[0]),b=byId(e[1]); if(!a||!b) return;
+      var p=document.createElementNS(NS,'path'); p.setAttribute('d',edgeGeom(a,b));
+      p.setAttribute('stroke',catColor(e[0]));
+      p.setAttribute('data-from',e[0]); p.setAttribute('data-to',e[1]);
+      svg.appendChild(p); });
+    drawLabels();
+    drawTop(topList);
+  }
+  function drawLabels(){
+    while(labSvg.firstChild) labSvg.removeChild(labSvg.firstChild);
+    var s=st.scale||1, gb=graph.getBoundingClientRect();
+    EDGES.forEach(function(e){ var desc=e[2]; if(!desc) return;
+      var a=byId(e[0]),b=byId(e[1]); if(!a||!b) return;
+      var ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+      var ax=(ra.right-gb.left)/s, ay=(ra.top-gb.top)/s+(ra.height/s)/2;
+      var bx=(rb.left-gb.left)/s, by=(rb.top-gb.top)/s+(rb.height/s)/2;
+      if(bx<ax+6) bx=ax+6;
+      var mx=(ax+bx)/2, my=(ay+by)/2, w=Math.max(28, desc.length*7+12), h=17;
+      var g=document.createElementNS(NS,'g'); g.setAttribute('class','pm-elabel');
+      g.setAttribute('data-from',e[0]); g.setAttribute('data-to',e[1]);
+      var r=document.createElementNS(NS,'rect');
+      r.setAttribute('x',mx-w/2); r.setAttribute('y',my-h/2); r.setAttribute('width',w); r.setAttribute('height',h);
+      r.setAttribute('rx',4); r.setAttribute('class','pm-el-bg'); r.setAttribute('stroke',catColor(e[0])); g.appendChild(r);
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',mx); t.setAttribute('y',my); t.setAttribute('text-anchor','middle');
+      t.setAttribute('dominant-baseline','central'); t.setAttribute('class','pm-el-t'); t.textContent=desc;
+      g.appendChild(t); labSvg.appendChild(g);
+    });
+    styleLabels();
+  }
+  function styleLabels(){
+    var labs=labSvg.querySelectorAll('.pm-elabel');
+    if(!activeKeys){ labSvg.classList.remove('dim'); [].forEach.call(labs,function(g){ g.classList.remove('on'); }); return; }
+    labSvg.classList.add('dim');
+    [].forEach.call(labs,function(g){ g.classList.toggle('on', !!activeKeys[g.getAttribute('data-from')+'|'+g.getAttribute('data-to')]); });
+  }
+  function drawTop(list){
+    while(topSvg.firstChild) topSvg.removeChild(topSvg.firstChild);
+    topList=list||[];
+    if(!topList.length) return;
+    var s=st.scale||1, gb=graph.getBoundingClientRect();
+    topList.forEach(function(e){ var a=byId(e[0]),b=byId(e[1]); if(!a||!b) return;
+      var ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+      var ax=(ra.right-gb.left)/s, ay=(ra.top-gb.top)/s+(ra.height/s)/2;
+      var bx=(rb.left-gb.left)/s, by=(rb.top-gb.top)/s+(rb.height/s)/2;
+      if(bx<ax+6) bx=ax+6; var dx=Math.max(30,(bx-ax)*0.5);
+      var p=document.createElementNS(NS,'path');
+      p.setAttribute('d','M'+ax+' '+ay+' C'+(ax+dx)+' '+ay+' '+(bx-dx)+' '+by+' '+bx+' '+by);
+      topSvg.appendChild(p);
+    });
+  }
+
+  /* 강조 */
+  function applyHL(nodeSet,edgeList){
+    var els=graph.querySelectorAll('.pm-node');
+    if(!nodeSet){ [].forEach.call(els,function(n){ n.classList.remove('hl','dim'); });
+      svg.classList.remove('dim'); activeKeys=null; styleLabels(); drawTop([]); return; }
+    [].forEach.call(els,function(n){ var on=nodeSet.has(n.id); n.classList.toggle('hl',on); n.classList.toggle('dim',!on); });
+    svg.classList.add('dim');
+    activeKeys={}; (edgeList||[]).forEach(function(e){ activeKeys[e[0]+'|'+e[1]]=1; });
+    styleLabels(); drawTop(edgeList);
+  }
+  function focusNode(id){ var set={}; set[id]=1; var el=[];
+    (ADJ.out[id]||[]).forEach(function(v){ set[v]=1; el.push([id,v]); });
+    (ADJ.pre[id]||[]).forEach(function(u){ set[u]=1; el.push([u,id]); });
+    applyHL({has:function(x){return !!set[x];}}, el); }
+  function focusEdge(from,to){ var set={}; set[from]=1; set[to]=1;
+    applyHL({has:function(x){return !!set[x];}}, [[from,to]]); }
+  function focusFeature(f){ var set={}; f.nodes.forEach(function(x){ set[x]=1; });
+    var el=EDGES.filter(function(e){ return set[e[0]]&&set[e[1]]; });
+    applyHL({has:function(x){return !!set[x];}}, el); }
+  function setActiveChip(id){
+    if(featList){ [].forEach.call(featList.children,function(b){ b.classList.toggle('on', b.dataset.feat===id); }); }
+    var cap=byId('pm-feat-cap'); if(!cap) return;
+    var f=null; for(var i=0;i<FEATURES.length;i++){ if(FEATURES[i].id===id){ f=FEATURES[i]; break; } }
+    if(f&&f.desc){ cap.textContent=''; var s=document.createElement('b'); s.textContent=f.name;
+      cap.appendChild(s); cap.appendChild(document.createTextNode(' — '+f.desc)); cap.hidden=false; }
+    else { cap.hidden=true; cap.textContent=''; } }
+  function clearFocus(){ focusRef=null; applyHL(null); setActiveChip(null); }
+
+  function buildChips(){ if(!featList) return; var seen={};
+    while(featList.firstChild) featList.removeChild(featList.firstChild);  // init 두 번 호출돼도 칩 중복 방지
+    FEATURES.forEach(function(f){ if(!f||!f.id||seen[f.id]) return; seen[f.id]=1;
+      var b=document.createElement('button'); b.type='button';
+      b.className='pm-chip'; b.textContent=f.name; b.dataset.feat=f.id;
+      b.addEventListener('click',function(){
+        if(focusRef&&focusRef.t==='f'&&focusRef.id===f.id){ clearFocus(); }
+        else { focusRef={t:'f',id:f.id}; focusFeature(f); setActiveChip(f.id); }
+      });
+      featList.appendChild(b); }); }
+
+  /* zoom 컨트롤 */
+  byId('pm-zin').addEventListener('click',function(){ zoomAround(1.2,viewport.clientWidth/2,viewport.clientHeight/2); });
+  byId('pm-zout').addEventListener('click',function(){ zoomAround(1/1.2,viewport.clientWidth/2,viewport.clientHeight/2); });
+  byId('pm-zfit').addEventListener('click',fit);
+  viewport.addEventListener('wheel',function(e){ e.preventDefault(); var r=viewport.getBoundingClientRect();
+    zoomAround(e.deltaY<0?1.1:1/1.1, e.clientX-r.left, e.clientY-r.top); },{passive:false});
+
+  /* 팬 + 클릭(이동 아님) 판정 — 텍스트 선택/블록 드래그 방지 */
+  var drag=null, moved=false, downTarget=null;
+  viewport.addEventListener('pointerdown',function(e){
+    if(e.target.closest('.pm-zoom')) return;
+    e.preventDefault(); moved=false; downTarget=e.target;
+    drag={x:e.clientX,y:e.clientY,tx:st.tx,ty:st.ty};
+    viewport.classList.add('grabbing');
+    try{ viewport.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  viewport.addEventListener('pointermove',function(e){
+    if(!drag) return;
+    if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4) moved=true;
+    st.tx=drag.tx+(e.clientX-drag.x); st.ty=drag.ty+(e.clientY-drag.y); apply();
+  });
+  function endDrag(){
+    if(drag && !moved && downTarget){
+      var lab=downTarget.closest && downTarget.closest('.pm-elabel');
+      var node=downTarget.closest && downTarget.closest('.pm-node');
+      if(lab){ var f=lab.getAttribute('data-from'), t=lab.getAttribute('data-to');
+        if(focusRef&&focusRef.t==='e'&&focusRef.f===f&&focusRef.tid===t){ clearFocus(); }
+        else { focusRef={t:'e',f:f,tid:t}; focusEdge(f,t); setActiveChip(null); } }
+      else if(node){ if(focusRef&&focusRef.t==='n'&&focusRef.id===node.id){ clearFocus(); }
+        else { focusRef={t:'n',id:node.id}; focusNode(node.id); setActiveChip(null); } }
+      else if(!(downTarget.closest && downTarget.closest('.pm-zoom'))){ clearFocus(); }
+    }
+    drag=null; moved=false; downTarget=null; viewport.classList.remove('grabbing');
+  }
+  viewport.addEventListener('pointerup',endDrag);
+  viewport.addEventListener('pointercancel',endDrag);
+
+  function init(){ build(); buildChips(); drawEdges(); fit(); }
+  window.addEventListener('load',init);
+  window.addEventListener('resize',function(){ requestAnimationFrame(drawEdges); });
+  if(window.ResizeObserver) new ResizeObserver(function(){ requestAnimationFrame(drawEdges); }).observe(graph);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function(){ drawEdges(); fit(); });
+  init();
+})();
+</script>
 </body>
 </html>

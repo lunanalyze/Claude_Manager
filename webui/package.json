@@ -4,9 +4,9 @@
   "private": true,
   "description": "Claude_Manager 읽기 전용 대시보드 (docs + transcript 뷰어). WSL에서만 실행.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3010",
     "build": "next build",
-    "start": "next start"
+    "start": "next start -p 3010"
   },
   "dependencies": {
     "next": "^15.1.0",
