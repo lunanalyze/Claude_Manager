@@ -27,3 +27,9 @@ Claude Code에게 뭔가 시켰을 때 **한 번에 되지 않아 검증이 필�
 - [Next.js SSR HTML grep 시 텍스트가 `<!-- -->`로 쪼개짐](./nextjs-ssr-html-grep-comment-nodes.md) — 매칭 전 주석 노드 제거 · `react ssr, comment nodes, grep`
 - [recharts 색이 CSS var()로 불안정 → JS 색 매핑](./recharts-css-var-svg-color.md) — SVG 차트는 토큰 대신 JS 색 맵 · `recharts, css variable, svg`
 - [WSL jq 미설치 → exit 127, JSON은 python3](./wsl-jq-missing.md) — 셸 JSON 파싱은 python3/node · `wsl, jq, command not found`
+- [python-docx 템플릿 치환 후 bold 유실](./python-docx-template-bold-lost.md) — 서식은 run 단위, 치환 후 코드에서 `run.bold=True` 재적용 · `python-docx, bold, placeholder 치환`
+- [한글 docx 폰트 미적용(맑은 고딕 무시)](./docx-korean-font-eastasia.md) — `w:rFonts`의 `w:eastAsia`를 함께 설정해야 한글에 먹음 · `python-docx, 한글 폰트, eastAsia`
+- [로컬 서버 exe 잔존·중복 기동](./local-server-exe-singleton-port.md) — 기동 전 `socket.connect_ex`로 포트 점유 확인 + idle 자동 shutdown · `로컬 서버, 포트 점유, PyInstaller`
+- [LLM이 bullet별로 객체를 쪼개 반환 → 병합 덮어쓰기로 bullet 1개로 붕괴](./llm-bullet-merge-overwrite-schema-variance.md) — LLM JSON 병합은 덮어쓰기 금지·빈 슬롯만 채움, 값 적으면 응답 원본부터 확인 · `LLM, JSON 스키마 변형, 병합 덮어쓰기, bullet 유실, 모델 교체`
+- [POI로 복사한 표가 참조 스타일 누락으로 첫 행 렌더 안 됨](./poi-docx-copied-table-missing-style-render.md) — 표 복사 시 참조 pStyle을 대상 styles.xml로 함께 복사, docx 검증은 LibreOffice PNG 렌더로 · `apache poi, xwpf, pStyle, styles.xml, 셀 음영 렌더, LibreOffice 렌더 검증`
+- [LLM 입력 context window 초과(400) — extracted.json 원본 OOXML 노이즈 수 MB](./llm-context-window-extracted-ooxml-noise.md) — 부가 산출물에 글자수 상한 + `raw_*_xml` 노이즈 제거(4.8MB→279K) · `openai, context window, 400, raw_docx_xml, 프롬프트 입력 상한`

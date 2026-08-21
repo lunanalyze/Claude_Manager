@@ -1,0 +1,3290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hwp-template",
+  "title": "HWP 양식 템플릿 (서식 규약의 기계 표현)",
+  "description": "hwp-template-extractor가 쓰고 hwp-report의 build_hwp.py·verify_hwp.py가 읽는 단일 계약서. 여기 없는 값은 렌더러가 임의로 정하지 않는다. 길이 단위는 HWPUNIT(1/7200인치)이며, 문단 여백·들여쓰기(ladder.left/indent, para_right_pad)만 HWPUNIT의 2배 스케일이다(HWP_SCHEME.md 함정 #15).",
+  "type": "object",
+  "required": [
+    "name",
+    "page",
+    "font",
+    "palette",
+    "headings",
+    "ladder",
+    "table",
+    "cover"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "양식 이름. 예: 전북은행-보고서"
+    },
+    "source": {
+      "type": "string",
+      "description": "추출 원본 hwp 경로"
+    },
+    "extracted_at": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "object",
+      "description": "항목별 추론 신뢰도. 'low'인 항목은 사람 확인을 받아야 한다.",
+      "additionalProperties": {
+        "enum": [
+          "high",
+          "medium",
+          "low",
+          "confirmed"
+        ]
+      }
+    },
+    "unsupported": {
+      "type": "array",
+      "description": "원본이 쓰지만 렌더러가 재현하지 못하는 요소 (셀 병합·그림·다단 등)",
+      "items": {
+        "type": "string"
+      }
+    },
+    "page": {
+      "type": "object",
+      "required": [
+        "paper_w",
+        "paper_h",
+        "margin_left",
+        "margin_right",
+        "margin_top",
+        "margin_bottom",
+        "body_width"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "paper_w": {
+          "type": "integer"
+        },
+        "paper_h": {
+          "type": "integer"
+        },
+        "margin_left": {
+          "type": "integer"
+        },
+        "margin_right": {
+          "type": "integer"
+        },
+        "margin_top": {
+          "type": "integer"
+        },
+        "margin_bottom": {
+          "type": "integer"
+        },
+        "header_len": {
+          "type": "integer"
+        },
+        "footer_len": {
+          "type": "integer"
+        },
+        "body_width": {
+          "type": "integer",
+          "description": "표 최대 폭의 기준"
+        },
+        "table_safety": {
+          "type": "integer",
+          "default": 500,
+          "description": "괘선·셀여백 때문에 실측이 커지는 만큼 빼는 여유"
+        },
+        "page_number": {
+          "enum": [
+            "none",
+            "bottom_center",
+            "bottom_right",
+            "top_right"
+          ]
+        },
+        "para_right_pad": {
+          "type": "integer",
+          "description": "본문 문단 오른쪽 여백(2배 스케일). 0이면 양쪽정렬이 여백을 침범한다"
+        },
+        "line_spacing": {
+          "type": "integer",
+          "default": 160
+        },
+        "break_word_unit": {
+          "type": "boolean",
+          "default": true,
+          "description": "한글 줄나눔을 어절 단위로"
+        }
+      }
+    },
+    "font": {
+      "type": "object",
+      "required": [
+        "primary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "type": "string"
+        },
+        "fallback": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "banner_num_bg": {
+          "$ref": "#/$defs/color"
+        },
+        "banner_num_fg": {
+          "$ref": "#/$defs/color"
+        },
+        "banner_title_bg": {
+          "$ref": "#/$defs/color"
+        },
+        "banner_title_fg": {
+          "$ref": "#/$defs/color"
+        },
+        "table_header_bg": {
+          "$ref": "#/$defs/color"
+        },
+        "emphasis": {
+          "$ref": "#/$defs/color",
+          "description": "강조색 1종. 검정·흰색과 함께 이 색만 허용"
+        }
+      }
+    },
+    "headings": {
+      "type": "object",
+      "required": [
+        "h1",
+        "h2",
+        "h3"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "h1": {
+          "$ref": "#/$defs/heading"
+        },
+        "h2": {
+          "$ref": "#/$defs/heading"
+        },
+        "h3": {
+          "$ref": "#/$defs/heading"
+        }
+      }
+    },
+    "ladder": {
+      "type": "array",
+      "description": "본문 불릿 사다리. 배열 순서 = level 1..n",
+      "minItems": 2,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "marker",
+          "size",
+          "left",
+          "indent"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "marker": {
+            "type": "string",
+            "maxLength": 2
+          },
+          "size": {
+            "type": "number"
+          },
+          "bold": {
+            "type": "boolean",
+            "default": false
+          },
+          "left": {
+            "type": "integer",
+            "description": "2배 스케일"
+          },
+          "indent": {
+            "type": "integer",
+            "description": "음수. 2배 스케일. 보통 -기호폭"
+          }
+        }
+      }
+    },
+    "special": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "conclusion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "marker": {
+              "type": "string",
+              "maxLength": 2
+            },
+            "size": {
+              "type": "number"
+            },
+            "bold": {
+              "type": "boolean"
+            },
+            "color": {
+              "enum": [
+                "emphasis",
+                "text"
+              ]
+            },
+            "left": {
+              "type": "integer"
+            },
+            "indent": {
+              "type": "integer"
+            },
+            "max_chars": {
+              "type": "integer",
+              "description": "이 길이를 넘으면 두 줄이 되어 강조가 죽는다"
+            }
+          }
+        },
+        "note": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "marker": {
+              "type": "string",
+              "maxLength": 2
+            },
+            "size": {
+              "type": "number"
+            },
+            "left": {
+              "type": "integer"
+            },
+            "indent": {
+              "type": "integer"
+            }
+          }
+        },
+        "enum_markers": {
+          "type": "string",
+          "description": "순서 열거 기호. 예: ①②③④⑤⑥⑦⑧⑨"
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "body_size",
+        "max_cols"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "header_size": {
+          "type": "number"
+        },
+        "header_bold": {
+          "type": "boolean",
+          "default": true
+        },
+        "header_align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "center"
+        },
+        "header_repeat": {
+          "type": "boolean",
+          "default": true,
+          "description": "쪽을 넘길 때 제목 줄 반복(제목 셀 지정)"
+        },
+        "body_size": {
+          "type": "number"
+        },
+        "padding_lr": {
+          "type": "integer",
+          "description": "셀 좌우 여백 합. ColWidth 계산 시 차감"
+        },
+        "padding_tb": {
+          "type": "integer",
+          "description": "셀 위·아래 여백(각각). 한글 기본 141은 9~10pt 글자에 빠듯해 글자가 괘선에 붙는다"
+        },
+        "vert_align": {
+          "enum": [
+            "top",
+            "center",
+            "bottom"
+          ],
+          "default": "center",
+          "description": "셀 안 세로 정렬. top이면 위아래 여유가 비대칭으로 보인다"
+        },
+        "max_cols": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 12
+        },
+        "caption_pos": {
+          "enum": [
+            "above_right",
+            "above_left",
+            "none"
+          ]
+        },
+        "caption_size": {
+          "type": "number"
+        },
+        "note_size": {
+          "type": "number"
+        },
+        "title_marker": {
+          "type": "string",
+          "maxLength": 2,
+          "description": "표 제목 앞 기호. 예: ◇"
+        },
+        "box": {
+          "type": "object",
+          "description": "강조 박스(1행 1열 표)",
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "oneOf": [
+                {
+                  "const": "body"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "bg": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        }
+      }
+    },
+    "cover": {
+      "type": "object",
+      "required": [
+        "order"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "impl": {
+              "enum": [
+                "boxed",
+                "paragraph"
+              ],
+              "description": "boxed = 1행1열 표 안에 넣음"
+            },
+            "size": {
+              "type": "number"
+            },
+            "bold": {
+              "type": "boolean"
+            },
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            "width": {
+              "oneOf": [
+                {
+                  "const": "body"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "date": {
+          "$ref": "#/$defs/coverLine"
+        },
+        "dept": {
+          "$ref": "#/$defs/coverLine"
+        },
+        "order": {
+          "type": "array",
+          "description": "표지 블록 출력 순서",
+          "items": {
+            "enum": [
+              "title",
+              "subtitle",
+              "date",
+              "dept"
+            ]
+          }
+        },
+        "date_format": {
+          "type": "string",
+          "description": "예: ( {date} )"
+        }
+      }
+    },
+    "cell_styles": {
+      "type": "object",
+      "description": "역할별 셀 장식. 렌더러는 여기 적힌 대로만 그린다 — 값이 없으면 한글 기본값(4면 실선)이 남아 양식이 어긋난다.",
+      "additionalProperties": false,
+      "properties": {
+        "banner_h1_num": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "banner_h1_title": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "banner_h2_num": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "banner_h2_title": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "banner_h3_num": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "banner_h3_title": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "table_header": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "table_body": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "box": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        },
+        "cover_title": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "셀 배경. null이면 채우지 않는다"
+            },
+            "borders": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "면별 테두리. all은 지정하지 않은 면의 기본값. 데이터표는 inner_vert/inner_horz로 내부 괘선을 따로 정한다.",
+              "properties": {
+                "all": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "left": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "top": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bottom": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_vert": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "inner_horz": {
+                  "oneOf": [
+                    {
+                      "const": "none",
+                      "description": "그 면에 선을 그리지 않는다"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "solid",
+                            "dot",
+                            "dash",
+                            "dashdot",
+                            "double",
+                            "thick"
+                          ]
+                        },
+                        "width_mm": {
+                          "type": "number",
+                          "description": "0.1 0.12 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.7 1.0 1.5 2.0 3.0 4.0 5.0"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "text_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "그 역할 셀의 글자색 (배너 번호칸의 흰 글자 등)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "heading": {
+      "type": "object",
+      "required": [
+        "impl",
+        "marker",
+        "size"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "impl": {
+          "enum": [
+            "banner_table",
+            "paragraph"
+          ],
+          "description": "banner_table = 번호칸+제목칸 2칸 표로 그림 / paragraph = 일반 문단"
+        },
+        "marker": {
+          "enum": [
+            "roman",
+            "arabic",
+            "arabic_dot",
+            "arabic_paren",
+            "hangul_dot",
+            "symbol",
+            "none"
+          ],
+          "description": "roman=Ⅰ. / arabic=1 / arabic_dot=1. / arabic_paren=1) / hangul_dot=가."
+        },
+        "size": {
+          "type": "number"
+        },
+        "bold": {
+          "type": "boolean",
+          "default": true
+        },
+        "num_cell_w": {
+          "type": "integer",
+          "description": "banner_table일 때 번호칸 폭"
+        },
+        "width": {
+          "oneOf": [
+            {
+              "const": "body"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "description": "banner_table 전체 폭"
+        },
+        "space_above": {
+          "type": "number",
+          "description": "위 빈 줄의 pt 크기. 0이면 없음"
+        },
+        "left": {
+          "type": "integer",
+          "description": "paragraph일 때 왼쪽 여백(2배 스케일)"
+        },
+        "indent": {
+          "type": "integer"
+        },
+        "symbol": {
+          "type": "string",
+          "maxLength": 2,
+          "description": "marker=symbol일 때 쓸 기호 (예: ❒). 번호 없이 기호만 붙는다"
+        }
+      }
+    },
+    "coverLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "type": "number"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "align": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,16 @@ node_modules/
 webui/.next/
 webui/node_modules/
 
+# hwp 양식 템플릿 (환경 로컬)
+# 실제 조직 내부 문서에서 추출한 것이라 공유하지 않는다 — 원본 XML 덤프는 물론이고,
+# template.json 에도 부서명·보고서 제목이 source 로 남는다.
+# 필요하면 원본 hwp 에서 hwp-template-extractor 로 재추출한다.
+skills/hwp-report/templates/
+
+# Python 바이트코드
+__pycache__/
+*.pyc
+
 # 환경 비밀/잡파일
 .env
 .env.*
