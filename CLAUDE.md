@@ -35,7 +35,16 @@ Claude 설정·표준·세션 로그를 한곳에 모으는 **관리 허브**. W
 1. **[완료] WSL 한쪽에서 `transcript → 사람이 읽기 쉬운 markdown` 변환 skill**을 먼저 완성한다. (hook 아님 — 명시적 실행) → `skills/transcript-to-md/`, `~/.claude/skills/`에 심링크 설치.
 2. **[완료] Claude_Manager를 git repo**로 만들어 문서 단일 원본을 확립하고, WSL의 CLAUDE.md가 그 문서를 import하게 한다. → 전역 `~/.claude/CLAUDE.md`가 `docs/standards/index.md`를 `@import`.
 3. **[완료] Next.js WebUI**로 문서/로그를 렌더링한다. → `webui/` (읽기 전용, WSL 전용). 실행: `cd webui && npm run dev`. `docs/`·`local/transcripts/`를 직접 읽음. 이번 버전은 WSL 로그만.
-4. **[다음] Windows 쪽을 clone**하고, skill·문서를 쌍둥이로 정렬한다. WebUI에 Windows 로그(`/mnt/c/Users/JBB/.claude` 변환분) 소스를 추가한다.
+4. **Windows 쪽을 clone**하고, skill·문서를 쌍둥이로 정렬한다. WebUI에 Windows 로그(`/mnt/c/Users/JBB/.claude` 변환분) 소스를 추가한다.
+   - **[완료] clone**: `C:\Users\JBB\Claude_Manager`. 원격은 GitHub `lunanalyze/Claude_Manager`(private)로, 양쪽 clone이 같은 origin을 공유한다.
+   - **[완료] skill·agent 정렬** (2026-08-21): 양쪽 `~/.claude/skills/` 가 동일한 8개 집합
+     (`issue-log`·`transcript-to-md`·`reference-doc`·`project-map`·`local-server`·`ship-guard`·`hwp-report`·`hwp-template-extractor`)
+     + `~/.claude/agents/hwp-doc-reviewer.md`. WSL은 심링크, Windows는 복사(DrvFs).
+     환경 제약이 있는 스킬은 **`description` 에 박아** 세션이 잘못 고르지 않게 했다(hwp 계열 = Windows 전용).
+   - **[완료] 문서 정렬**: Windows 로컬에만 있던 `docs/issues` 6건·`docs/references` 4건을 repo로 편입.
+   - **[다음] WebUI Windows 로그 소스**: 미착수. ⚠️ Windows `projects/` 슬러그는 한글 폴더명이
+     전부 하이픈으로 뭉개져(`C--Users-JBB-Desktop---------` 5건) 슬러그만으로 프로젝트를 구분할 수 없다.
+     JSONL 라인의 `cwd` 필드를 읽어 실제 경로를 복원해야 한다.
 5. **Project_Manager**를 얹는다.
 
 > **트리거 결정**: transcript 변환은 `SessionEnd` hook 자동 배선 대신 **skill**(사용자 명시 실행)로 한다. 이유 — 환경별 settings.json 배선 분리가 불필요해지고, fire-and-forget hook의 디버깅 난점을 피하며, 원할 때만 변환할 수 있다. (hook 스펙은 아래에 참고용으로만 남김.)
