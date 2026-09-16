@@ -1,0 +1,128 @@
+<!--
+  업데이트 배너 — 프레임워크 없는 참고 구현. 이 파일 하나를 붙여 넣으면 동작한다.
+
+  상태 기계는 React 변형(UpdateBanner.tsx)과 똑같다:
+      조회 → (있으면) 배너 → 확인 → 적용 → 서버 복귀 대기 → 새로고침
+
+  설계 의도
+   - 배너는 **화면 맨 위 한 줄**이다. 모달로 가로막지 않는다 — 업데이트는 급한 일이 아니고,
+     하던 일을 끊으면 오히려 미루게 된다.
+   - **무엇이 바뀌는지(notes)와 크기**를 먼저 보여 준다. 누르기 전에 판단할 수 있어야 한다.
+   - '나중에'는 그 버전만 숨긴다. 다음 버전이 나오면 다시 뜬다.
+   - 적용 중에는 **닫을 수 없다.** 교체 도중 창을 닫으면 사용자는 무슨 일이 벌어졌는지 모른다.
+   - 색·글꼴·모서리는 프로젝트 토큰으로 바꿔 쓸 것(아래 CSS 변수만 갈아끼우면 된다).
+-->
+<style>
+  .upd-banner {
+    --upd-bg: #eef4ff;
+    --upd-fg: #10305c;
+    --upd-accent: #0e5cb5;
+    --upd-border: #cfe0fa;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--upd-bg);
+    color: var(--upd-fg);
+    border-bottom: 1px solid var(--upd-border);
+    font-size: 14px;
+  }
+  .upd-banner[hidden] { display: none; }
+  .upd-title { font-weight: 600; }
+  .upd-notes { color: color-mix(in srgb, var(--upd-fg) 70%, transparent); }
+  .upd-spacer { margin-left: auto; }
+  .upd-btn {
+    border: 0; border-radius: 6px; padding: 7px 14px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    background: var(--upd-accent); color: #fff;
+  }
+  .upd-btn[disabled] { opacity: .55; cursor: default; }
+  .upd-btn--ghost { background: transparent; color: inherit; font-weight: 500; }
+  .upd-phase { color: var(--upd-accent); }
+  .upd-error { color: #c0392b; }
+</style>
+
+<div class="upd-banner" id="upd-banner" role="status" aria-live="polite" hidden>
+  <span class="upd-title" id="upd-title"></span>
+  <span class="upd-notes" id="upd-notes"></span>
+  <span class="upd-spacer"></span>
+  <span class="upd-phase" id="upd-phase"></span>
+  <span class="upd-error" id="upd-error"></span>
+  <button class="upd-btn upd-btn--ghost" id="upd-later" type="button">나중에</button>
+  <button class="upd-btn" id="upd-apply" type="button">업데이트</button>
+</div>
+
+<script type="module">
+  import { checkForUpdate, runUpdate, formatSize } from "./update-client.js";
+
+  // ── 프로젝트에 맞게 이 넷만 바꾼다 ───────────────────────────────────────
+  const OWNER = "<owner>";                 // 사용자에게 받은 public repo
+  const REPO = "<repo>";
+  const HEALTH = "/health";                // 계약 C1 — { version } 을 돌려주는 경로
+  const APPLY = "/api/update/apply";       // 계약 C3 — 적용 요청 경로
+  const DISMISS_KEY = "update-dismissed";  // '나중에' 를 기억하는 키
+
+  const el = (id) => document.getElementById(id);
+  const banner = el("upd-banner");
+
+  function show({ version, notes, size, restart }) {
+    el("upd-title").textContent = `새 버전 ${version} 이 있습니다`;
+    el("upd-notes").textContent =
+      [notes, formatSize(size), restart ? "적용 시 앱이 자동으로 재시작됩니다" : null]
+        .filter(Boolean)
+        .join(" · ");
+    banner.hidden = false;
+  }
+
+  function setBusy(busy) {
+    el("upd-apply").disabled = busy;
+    el("upd-later").hidden = busy; // 적용 중에는 닫을 수 없다
+  }
+
+  async function boot() {
+    // 현재 버전은 앱 자신에게 묻는다(계약 C1) — 화면에 하드코딩하지 않는다.
+    let currentVersion = "";
+    try {
+      currentVersion = (await (await fetch(HEALTH, { cache: "no-store" })).json()).version ?? "";
+    } catch {
+      return; // 앱과 대화가 안 되면 업데이트 얘기를 꺼낼 때가 아니다
+    }
+
+    const r = await checkForUpdate({ currentVersion, owner: OWNER, repo: REPO });
+    if (!r.available || !r.latest) return;                  // 조회 실패도 여기서 조용히 끝난다
+    if (localStorage.getItem(DISMISS_KEY) === r.latest.version) return;
+
+    show({
+      version: r.latest.version,
+      notes: r.latest.notes,
+      size: r.latest.pack?.size,
+      restart: r.latest.restart_required,
+    });
+
+    el("upd-later").onclick = () => {
+      localStorage.setItem(DISMISS_KEY, r.latest.version); // 이 버전만 숨긴다
+      banner.hidden = true;
+    };
+
+    el("upd-apply").onclick = async () => {
+      setBusy(true);
+      el("upd-error").textContent = "";
+      try {
+        await runUpdate({
+          applyEndpoint: APPLY,
+          healthEndpoint: HEALTH,
+          onPhase: (p) => (el("upd-phase").textContent = p),
+        });
+        localStorage.removeItem(DISMISS_KEY);
+      } catch (e) {
+        el("upd-phase").textContent = "";
+        el("upd-error").textContent = e.message;
+        setBusy(false); // 다시 시도할 수 있게 되돌린다
+      }
+    };
+  }
+
+  boot();
+</script>
