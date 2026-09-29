@@ -69,3 +69,4 @@
 - [Table](./table.md) — 정렬·포맷·상태(로딩/빈/에러)·a11y
 - [Image](./image.md) — `next/image`·alt·CLS·포맷·아바타 폴백
 - [Chart / Graph](./chart.md) — 데이터에 맞는 **차트 종류 선택**·숫자 포맷·상태·a11y
+- [Code](./code.md) — 코드 조각별 **색 토큰**(라이트·다크)·언어 표시·복사·색 입히기 방법

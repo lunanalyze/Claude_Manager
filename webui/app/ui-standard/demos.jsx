@@ -667,7 +667,11 @@ export function DemoCode({ variant }) {
   return (
     <div className={`wcode code-${variant} demo-full`}>
       <div className="code-bar"><span className="cd-dot" /><span className="cd-dot" /><span className="cd-dot" /></div>
-      <pre><span className="tk-k">const</span> total = orders.<span className="tk-f">reduce</span>((a, o) =&gt; a + o.amount, <span className="tk-n">0</span>);</pre>
+      <pre>
+        <span className="tk-c">{"// 월말 잔액 합계"}</span>{"\n"}
+        <span className="tk-k">const</span> label = <span className="tk-s">&quot;월말 잔액&quot;</span>;{"\n"}
+        <span className="tk-k">const</span> total = orders.<span className="tk-f">reduce</span>((a: <span className="tk-t">number</span>, o) =&gt; a + o.amount, <span className="tk-n">0</span>);
+      </pre>
     </div>
   );
 }

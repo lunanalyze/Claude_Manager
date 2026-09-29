@@ -612,10 +612,14 @@
 .wcode .cd-dot { width: 9px; height: 9px; border-radius: 999px; background: currentColor; opacity: .35; }
 .code-dark { background: hsl(222 47% 13%); color: #e2e8f0; }
 .code-dark .tk-k { color: #c792ea; } .code-dark .tk-f { color: #82aaff; } .code-dark .tk-n { color: #f78c6c; }
+.code-dark .tk-s { color: #c3e88d; } .code-dark .tk-c { color: #697098; font-style: italic; } .code-dark .tk-t { color: #89ddff; }
 .code-light { background: hsl(210 40% 98%); color: hsl(222 47% 20%); border: 1px solid hsl(var(--border)); }
 .code-light .tk-k { color: hsl(262 60% 50%); } .code-light .tk-f { color: hsl(221 70% 45%); } .code-light .tk-n { color: hsl(20 80% 45%); }
+/* 문자열·주석·타입 — 2026-09-29 추가 (docs/standards/ui/code.md, ALM 에서 처음 정함) */
+.code-light .tk-s { color: hsl(142 60% 30%); } .code-light .tk-c { color: hsl(215 16% 47%); font-style: italic; } .code-light .tk-t { color: hsl(188 70% 32%); }
 .code-bordered { background: hsl(var(--card)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
 .code-bordered .tk-k { color: hsl(var(--primary)); font-weight: 600; } .code-bordered .tk-f { color: hsl(199 89% 42%); } .code-bordered .tk-n { color: hsl(20 80% 45%); }
+.code-bordered .tk-s { color: hsl(142 60% 32%); } .code-bordered .tk-c { color: hsl(var(--muted-foreground)); font-style: italic; } .code-bordered .tk-t { color: hsl(188 70% 32%); }
 
 /* ── 트리 뷰 ───────────────────────────────── */
 .wtree { width: 100%; font-size: 13px; }
