@@ -132,6 +132,27 @@ git remote set-url origin https://gitea.com/<owner>/<repo>.git
 
 ---
 
+## Windows 환경
+
+`scan.py` 와 판정 규칙은 그대로 쓴다. Windows 네이티브에서는 **호출 방법만** 다르다
+(Claude_Manager 원칙 3 — 같은 목적, 환경별 배선).
+
+| 목적 | WSL | Windows (Git Bash) |
+|---|---|---|
+| 스캐너 경로 | `G="$(readlink -f ~/.claude/skills/ship-guard)/scan.py"` | `G="$HOME/.claude/skills/ship-guard/scan.py"` (복사 설치라 심링크가 없다) |
+| 스캔 실행 | `python3 "$G" --mode staged` | `PYTHONUTF8=1 python "$G" --mode staged` |
+| Python 빌드 게이트 | `python3 -m compileall -q src` | `python -m compileall -q src` |
+
+PowerShell 에서는 `$env:PYTHONUTF8 = "1"; python "$env:USERPROFILE\.claude\skills\ship-guard\scan.py" --mode staged`.
+
+- **`PYTHONUTF8=1` 은 빼면 안 된다.** `scan.py` 는 git 출력을 텍스트 모드로 읽는데, Windows 기본 인코딩(cp949)으로
+  UTF-8 한글 diff 를 읽다 `UnicodeDecodeError` 가 나고 이어서 `AttributeError: 'NoneType' … splitlines` 로 끝난다.
+  `PYTHONIOENCODING=utf-8` 은 콘솔 입출력에만 적용돼 이 문제를 못 막는다(2026-10-08 ALM·Claude_Manager 커밋 때 확인).
+- 스캐너가 Traceback 으로 끝났으면 **검사가 안 된 것**이다. "BLOCK 0" 으로 치지 말고 위 방식으로 다시 돌린다.
+- Windows 에는 `python3` 가 없는 경우가 많다 — `python` 또는 `py` 를 쓴다.
+
+---
+
 ## 관련 문서
 
 - [작업 규칙](../../docs/standards/working-agreement.md) — 규칙 3(되돌릴 수 없는 일은 먼저 묻는다)
