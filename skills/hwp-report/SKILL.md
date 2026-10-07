@@ -58,6 +58,7 @@ python -c "import fitz, hwp5, lxml; print('PyMuPDF/pyhwp/lxml OK')"
 - `pagebreak`는 절 경계에서 **제목·헤더만 남을 때만**(R10·R11). 습관적으로 넣지 마라
 - 3개 이상 항목 비교 → 표 / 2개 이하 → 문장 / 결론 3줄 → `box` (§3-4 판단 규칙)
 - 긴 서술을 표 셀에 넣지 마라. 셀은 2줄 이내가 원칙이다
+- 강조는 문장 전체가 아니라 **핵심 구절만** `**구절**` 로 감싼다(불릿·결론·각주·박스 텍스트). 줄 전체를 `bold`+`blue` 로 칠하면 기호까지 파랗게 되어 원본 양식과 달라진다
 
 ### 3. 생성한다
 
@@ -87,9 +88,11 @@ INV4 사다리 계단 · INV5 내어쓰기 · INV6 제목 번호 · INV7 내용 
 ### 4. 검수한다 (건너뛰지 말 것)
 
 ```bash
-python <this>/scripts/verify_hwp.py out.hwp --pdf out.pdf --doc doc.json \
+python <this>/scripts/verify_hwp.py out.hwp --pdf out.pdf --doc doc.json -t <양식이름> \
        --png-dir _verify --json _verify/report.json
 ```
+
+`-t` 를 꼭 준다 — 제목·불릿 계층은 양식(템플릿)의 제목·사다리 정의로 판정하고, 양식이 쓰는 색(표지 남색 제목 등)을 허용한다. 빼면 기본 규칙(□∙→)으로 판정해 오탐이 난다.
 
 그리고 **`hwp-doc-reviewer` 서브에이전트**를 띄워 페이지 이미지를 눈으로 확인하게 한다
 (정의: [`agents/hwp-doc-reviewer.md`](./agents/hwp-doc-reviewer.md) → `~/.claude/agents/`에 설치).

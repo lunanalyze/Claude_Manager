@@ -81,7 +81,7 @@
       "properties": {
         "type": { "const": "bullet" },
         "level": { "type": "integer", "minimum": 1, "maximum": 4 },
-        "text": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1, "description": "**구절** 로 감싼 부분은 강조색·굵게 (문장 전체가 아니라 핵심 구절만)" },
         "bold": { "type": "boolean" },
         "color": { "enum": ["black", "blue"] },
         "marker": { "enum": ["□", "∙", "→", "↳", "-"], "description": "레벨 기본값 대신 강제 지정" }
@@ -95,7 +95,7 @@
       "properties": {
         "type": { "const": "enum" },
         "index": { "type": "integer", "minimum": 1, "maximum": 9 },
-        "text": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1, "description": "**구절** 로 감싼 부분은 강조색·굵게 (문장 전체가 아니라 핵심 구절만)" },
         "bold": { "type": "boolean" },
         "color": { "enum": ["black", "blue"] }
       }
@@ -107,7 +107,7 @@
       "additionalProperties": false,
       "properties": {
         "type": { "const": "conclusion" },
-        "text": { "type": "string", "minLength": 1 }
+        "text": { "type": "string", "minLength": 1, "description": "**구절** 로 감싼 부분은 강조색·굵게 (문장 전체가 아니라 핵심 구절만)" }
       }
     },
     "note": {
@@ -117,7 +117,7 @@
       "additionalProperties": false,
       "properties": {
         "type": { "const": "note" },
-        "text": { "type": "string", "minLength": 1 }
+        "text": { "type": "string", "minLength": 1, "description": "**구절** 로 감싼 부분은 강조색·굵게 (문장 전체가 아니라 핵심 구절만)" }
       }
     },
     "box": {
@@ -138,7 +138,7 @@
             "additionalProperties": false,
             "properties": {
               "level": { "type": "integer", "minimum": 1, "maximum": 4 },
-              "text": { "type": "string", "minLength": 1 },
+              "text": { "type": "string", "minLength": 1, "description": "**구절** 로 감싼 부분은 강조색·굵게 (문장 전체가 아니라 핵심 구절만)" },
               "bold": { "type": "boolean" },
               "color": { "enum": ["black", "blue"] }
             }

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import subprocess
 import sys
@@ -58,6 +59,10 @@ def hexrgb(h, default=BLACK):
         return default
     h = h.lstrip("#")
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+
+
+# 문서 모델의 구절 강조 표기: **구절**
+EMPH_RE = re.compile(r"\*\*(.+?)\*\*")
 
 
 def fmt_num(kind: str, n: int) -> str:
@@ -195,7 +200,8 @@ class HwpDoc:
                 n.NumberFormat = self.hwp.NumberFormat("Digit")
             except Exception:  # noqa: BLE001
                 pass
-            n.SideChar = ord("-")
+            side = self.pg.get("page_number_side", "-")   # 양식이 '- 1 -' 인지 '1' 인지
+            n.SideChar = ord(side) if side else 0
             if not self.hwp.HAction.Execute("PageNumPos", n.HSet):
                 self.warnings.append("쪽 번호 삽입 실패")
         except Exception as e:  # noqa: BLE001
@@ -253,12 +259,25 @@ class HwpDoc:
     def brk(self):
         self._run("BreakPara")
 
+    def rich(self, s, *, size=11.0, bold=False, color=BLACK):
+        """**구절** 을 강조색·굵게로 쓴다. 문장 전체가 아니라 핵심 구절만 강조하는 양식용."""
+        pos = 0
+        for m in EMPH_RE.finditer(s or ""):
+            if m.start() > pos:
+                self.char(size=size, bold=bold, color=color)
+                self.text(s[pos:m.start()])
+            self.char(size=size, bold=True, color=self.emphasis)
+            self.text(m.group(1))
+            pos = m.end()
+        if pos == 0 or pos < len(s or ""):
+            self.char(size=size, bold=bold, color=color)
+            self.text((s or "")[pos:])
+
     def line(self, s, *, size=11.0, bold=False, color=BLACK, left=0, indent=0,
              align="justify", spacing=None, space_below=0, right=None):
         self.para(left=left, indent=indent, align=align, spacing=spacing,
                   space_below=space_below, right=self.right_pad if right is None else right)
-        self.char(size=size, bold=bold, color=color)
-        self.text(s)
+        self.rich(s, size=size, bold=bold, color=color)
         self.brk()
 
     def blank(self, size=9.0):
@@ -439,6 +458,25 @@ class HwpDoc:
         self._run("Cancel")
         self._goto_first_cell()
 
+    def _set_row_height(self, h):
+        """표 전체 셀 높이를 h(HWPUNIT)로 — 배너 번호칸처럼 원본이 높이를 키워 둔 경우.
+        글자는 세로 가운데로 둔다."""
+        self._goto_first_cell()
+        self._run("TableCellBlock")
+        self._run("TableCellBlockExtend")
+        self._run("TableColEnd")
+        try:
+            hs = self.hwp.HParameterSet.HShapeObject
+            self.hwp.HAction.GetDefault("TablePropertyDialog", hs.HSet)
+            hs.ShapeTableCell.Height = int(h)
+            hs.ShapeTableCell.VertAlign = 1
+            if not self.hwp.HAction.Execute("TablePropertyDialog", hs.HSet):
+                self.warnings.append("배너 높이 지정 실패")
+        except Exception as e:  # noqa: BLE001
+            self.warnings.append(f"배너 높이 지정 실패: {e}")
+        self._run("Cancel")
+        self._goto_first_cell()
+
     def create_table(self, nrows, ncols, widths):
         """widths: 셀 실폭(HWPUNIT). 합계가 표 폭이 된다."""
         total = sum(widths)
@@ -474,13 +512,21 @@ class HwpDoc:
                     if self.create_table(1, 1, [self._resolve_width(t.get("width"))]):
                         self._decorate_cell(self._style("cover_title"), 0, 0, 1, 1)
                         self.para(align=t.get("align", "center"))
-                        self.char(size=t.get("size", 16.0), bold=t.get("bold", True))
+                        self.char(size=t.get("size", 16.0), bold=t.get("bold", True),
+                                  color=hexrgb(t.get("color"), BLACK))
                         self.text(title)
+                        sub = cv.get("subtitle") or {}
+                        if sub.get("in_box") and meta.get("subtitle"):
+                            self.brk()
+                            self.para(align=t.get("align", "center"))
+                            self.char(size=sub.get("size", 11.0), bold=sub.get("bold", False),
+                                      color=hexrgb(sub.get("color"), BLACK))
+                            self.text(meta["subtitle"])
                         self._exit_table()
                 else:
                     self.line(title, size=t.get("size", 16.0), bold=t.get("bold", True),
                               align=t.get("align", "center"))
-            elif part == "subtitle" and meta.get("subtitle"):
+            elif part == "subtitle" and meta.get("subtitle") and not (cv.get("subtitle") or {}).get("in_box"):
                 self.line(meta["subtitle"], size=12.0, align="center")
             elif part == "date" and meta.get("date"):
                 d = cv.get("date", {})
@@ -495,23 +541,32 @@ class HwpDoc:
     def _banner(self, spec, num, text, fallback_size, level="h1"):
         total = self._resolve_width(spec.get("width"))
         num_w = int(spec.get("num_cell_w", 3000))
+        gap_w = int(spec.get("gap_cell_w", 0))    # 번호칸과 제목칸 사이 빈칸 (없으면 2칸 배너)
         size = spec.get("size", fallback_size)
         bold = spec.get("bold", True)
-        if not self.create_table(1, 2, [num_w, total - num_w]):
+        widths = [num_w, gap_w, total - num_w - gap_w] if gap_w else [num_w, total - num_w]
+        ncols = len(widths)
+        if not self.create_table(1, ncols, widths):
             self.line(f"{num} {text}", size=size, bold=bold)
             return
+        if spec.get("row_height"):
+            self._set_row_height(int(spec["row_height"]))
         st_num = self._style(f"banner_{level}_num")
         st_ttl = self._style(f"banner_{level}_title")
         # 번호칸
         num_fg = self._text_color(st_num, self.pal.get("banner_num_fg"), BLACK)
         ttl_fg = self._text_color(st_ttl, self.pal.get("banner_title_fg"), BLACK)
-        self._decorate_cell(st_num, 0, 0, 1, 2)
+        self._decorate_cell(st_num, 0, 0, 1, ncols)
         self.para(align="center")
         self.char(size=size, bold=bold, color=num_fg)
         self.text(num)
+        if gap_w:
+            # 빈칸: 글자 없이 장식(세로선 등)만
+            self._run("TableRightCell")
+            self._decorate_cell(self._style(f"banner_{level}_gap"), 0, 1, 1, ncols)
         # 제목칸
         self._run("TableRightCell")
-        self._decorate_cell(st_ttl, 0, 1, 1, 2)
+        self._decorate_cell(st_ttl, 0, ncols - 1, 1, ncols)
         self.para(align="left")
         self.char(size=size, bold=bold, color=ttl_fg)
         self.text(text)
@@ -576,11 +631,11 @@ class HwpDoc:
                   bold=c.get("bold", True), color=col,
                   left=c.get("left", 3300), indent=c.get("indent", -3300))
 
-    def block_note(self, text):
+    def block_note(self, text, size=None):
         n = self.sp.get("note", {})
         mk = n.get("marker", "*")
         t = text if text.startswith((mk, "※")) else f"{mk} {text}"
-        self.line(t, size=n.get("size", 9.0), left=n.get("left", 3300),
+        self.line(t, size=size or n.get("size", 9.0), left=n.get("left", 3300),
                   indent=n.get("indent", -2700))
 
     def block_box(self, items, title=None):
@@ -676,7 +731,7 @@ class HwpDoc:
         self._set_cell_margins(nrows_all)     # 반드시 장식 적용 뒤 (함정 #19)
         self._exit_table()
         if spec.get("note"):
-            self.block_note(spec["note"])
+            self.block_note(spec["note"], size=self.tb.get("note_size"))   # 표 각주는 표 글자 크기
         self.blank()
 
     def _resolve_widths(self, widths, ncols):

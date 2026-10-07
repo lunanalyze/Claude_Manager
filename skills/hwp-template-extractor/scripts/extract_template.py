@@ -29,12 +29,22 @@ HWPUNIT_PER_MM = 7200 / 25.4
 ROMAN = "ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ"
 HANGUL_ORD = "가나다라마바사아자차카타파하"
 # 본문 머리기호 후보 (제목 번호와 구분한다)
-BULLET_CHARS = "□▢■∎❑∙·•○●◦◇◆-–—▸▹▪▫※☞⇒→↳↦"
+# ㅇ(한글 자모 이응)은 공문서에서 o 대신 쓰는 1단계 불릿이다
+BULLET_CHARS = "□▢■∎❑∙·•○●◦◇◆ㅇ-–—▸▹▪▫※☞⇒→↳↦"
 # 기호형 제목 후보 — 굵고 크게, 문서 최상위에서 반복 사용되면 제목으로 본다
 SYMBOL_HEAD_CHARS = "❒❑■□◆▣◉●∎"
 CONCLUSION_CHARS = "☞⇒▶"
 NOTE_CHARS = "*※"
 ENUM_CHARS = "①②③④⑤⑥⑦⑧⑨⑩"
+
+
+def chromatic(c):
+    """유채색인가. 검정·회색·흰색(무채색)은 강조색 후보가 아니다."""
+    try:
+        rgb = [int(c[i:i + 2], 16) for i in (1, 3, 5)]
+    except (TypeError, ValueError):
+        return False
+    return max(rgb) - min(rgb) >= 40
 
 
 def mm(v):
@@ -80,7 +90,7 @@ class Extractor:
         a = self.parashapes[int(idx)].attrib
         return {"indent": int(a.get("indent", 0) or 0),
                 "left": int(a.get("doubled-margin-left", a.get("left-margin", 0)) or 0),
-                "align": a.get("align-horizontal")}
+                "align": a.get("align-horizontal", a.get("align"))}
 
     # ── 셀 장식 ───────────────────────────────────────────────────────
     BORDER_WIDTHS = [0.1, 0.12, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
@@ -226,7 +236,11 @@ class Extractor:
             main, ov, ovt = self._rule_rows(t)
             row_bf = t["bfids"][main] if main < len(t["bfids"]) else []
             row_cs = t["cell_cs"][main] if main < len(t["cell_cs"]) else []
-            for ci, key in ((0, f"banner_{lvl}_num"), (1, f"banner_{lvl}_title")):
+            ni, gi, ti = self._banner_cols(t)
+            roles = [(ni, f"banner_{lvl}_num"), (ti, f"banner_{lvl}_title")]
+            if gi is not None:
+                roles.append((gi, f"banner_{lvl}_gap"))
+            for ci, key in roles:
                 if ci >= len(row_bf):
                     continue
                 d = self._deco(row_bf[ci])
@@ -340,6 +354,7 @@ class Extractor:
             heights = [min((int(c.get("height", 0)) for c in rw), default=0) for rw in grid]
             self.tables.append({
                 "w": int(tb.get("width", 0)),
+                "h": int(tb.get("height", 0)),
                 "rows": len(rows), "cols": int(body.get("cols", 0)),
                 "cols_per_row": [len(r) for r in grid],
                 "cell_w": [int(c.get("width", 0)) for c in grid[0]] if grid else [],
@@ -356,6 +371,24 @@ class Extractor:
             })
 
     # ── 추론 ──────────────────────────────────────────────────────────
+    def _page_number_field(self):
+        """머리말/꼬리말 안의 쪽 번호 자동 필드(AutoNumbering kind=page) → (위치, 앞뒤 기호).
+        쪽 번호를 '쪽 번호 매기기'가 아니라 꼬리말에 필드로 넣는 양식이 흔하다."""
+        for tag, vert in (("Footer", "bottom"), ("Header", "top")):
+            for el in self.root.iter(tag):
+                an = next((a for a in el.iter("AutoNumbering") if a.get("kind") == "page"), None)
+                if an is None:
+                    continue
+                para = next(an.iterancestors("Paragraph"), None)
+                align = self._ps(para.get("parashape-id")).get("align") if para is not None else None
+                if vert == "top":
+                    where = "top_right"
+                else:
+                    where = "bottom_right" if align == "right" else "bottom_center"
+                side = (an.get("prefix") or an.get("suffix") or "").strip()[:1]
+                return where, side
+        return "none", ""
+
     def page(self):
         pd = next(self.root.iter("PageDef"))
         g = {k: int(pd.get(v)) for k, v in [
@@ -366,7 +399,12 @@ class Extractor:
         g["body_width"] = g["paper_w"] - g["margin_left"] - g["margin_right"]
         g["table_safety"] = 500
         pos = next(self.root.iter("PageNumberPosition"), None)
-        g["page_number"] = (pos.get("position") if pos is not None else "none") or "none"
+        if pos is not None:
+            g["page_number"] = pos.get("position") or "none"
+        else:
+            g["page_number"], side = self._page_number_field()
+            if g["page_number"] != "none":
+                g["page_number_side"] = side
         if g["page_number"] not in ("bottom_center", "bottom_right", "top_right", "none"):
             g["page_number"] = "bottom_center"
         g["para_right_pad"] = 800
@@ -393,14 +431,27 @@ class Extractor:
         if s not in self.unsupported:
             self.unsupported.append(s)
 
+    BANNER_GAP_MAX = 3000   # 번호칸과 제목칸 사이 빈칸으로 볼 최대 폭(HWPUNIT, 약 10.6mm)
+
+    @staticmethod
+    def _banner_cols(t):
+        """배너표의 (번호칸, 빈칸 또는 None, 제목칸) 열 번호."""
+        return (0, 1, 2) if t["cols"] == 3 else (0, None, 1)
+
     def _banner_tables(self):
-        """제목 배너로 보이는 표: 2칸, 1~3행, 첫 칸이 좁고 그 안이 번호."""
+        """제목 배너로 보이는 표: 1~3행, 첫 칸이 좁고 그 안이 번호.
+        2칸(번호 | 제목) 또는 3칸(번호 | 좁은 빈칸 | 제목) — 빈칸은 번호와 제목 사이 간격·세로선용."""
         out = []
         for t in self.tables:
-            if t["cols"] != 2 or t["rows"] > 3 or not t["cell_w"]:
+            if t["cols"] not in (2, 3) or t["rows"] > 3 or not t["cell_w"]:
                 continue
             if t["cell_w"][0] > 6000:
                 continue
+            if t["cols"] == 3:
+                gap_texts = [row[1] for row in t["texts"] if len(row) > 1]
+                if (len(t["cell_w"]) < 3 or t["cell_w"][1] > self.BANNER_GAP_MAX
+                        or any(gap_texts) or t["merged"]):
+                    continue
             head = (t["texts"][0][0] if t["texts"] and t["texts"][0] else "").strip()
             kind = None
             if head and head[0] in ROMAN:
@@ -494,8 +545,14 @@ class Extractor:
                 "width": "body" if abs(t["w"] - page["body_width"]) < 2500 else t["w"],
                 "space_above": 11.0 if lvl == "h1" else 9.0,
             }
+            if t.get("h", 0) > 0:
+                levels[lvl]["row_height"] = t["h"]
+            gap_note = ""
+            if t["cols"] == 3:
+                levels[lvl]["gap_cell_w"] = t["cell_w"][1]
+                gap_note = f"빈칸 {mm(t['cell_w'][1])}mm · "
             self.evidence[f"headings.{lvl}"] = (
-                f"배너표 {len(ts)}개 · 번호칸 {mm(t['cell_w'][0])}mm · 표폭 {mm(t['w'])}mm · "
+                f"배너표 {len(ts)}개 · 번호칸 {mm(t['cell_w'][0])}mm · {gap_note}표폭 {mm(t['w'])}mm · "
                 f"{levels[lvl]['size']}pt · 번호형식 {kind}")
             used += 1
 
@@ -645,18 +702,25 @@ class Extractor:
 
     def special(self):
         out = {}
-        for p in self.paras:
-            t = p["text"]
-            if t and t[0] in CONCLUSION_CHARS and "conclusion" not in out:
-                out["conclusion"] = {
-                    "marker": t[0], "size": p["cs"].get("size", 11.0),
-                    "bold": bool(p["cs"].get("bold")),
-                    "color": "emphasis" if p["cs"].get("color") not in (None, "#000000") else "text",
-                    "left": 3300, "indent": -3300, "max_chars": 44,
-                }
-            if t and t[0] in NOTE_CHARS and "note" not in out:
-                out["note"] = {"marker": t[0], "size": p["cs"].get("size", 9.0),
-                               "left": 3300, "indent": -2700}
+        # 첫 등장 하나로 정하면 그 문단의 우연한 서식이 양식이 된다 → 등장 전체의 최빈값
+        concl = [p for p in self.paras if p["text"][:1] in CONCLUSION_CHARS]
+        if concl:
+            mk = Counter(p["text"][0] for p in concl).most_common(1)[0][0]
+            (size, bold, emph), _ = Counter(
+                (p["cs"].get("size", 11.0), bool(p["cs"].get("bold")), chromatic(p["cs"].get("color")))
+                for p in concl).most_common(1)[0]
+            out["conclusion"] = {
+                "marker": mk, "size": size, "bold": bold,
+                "color": "emphasis" if emph else "text",
+                "left": 3300, "indent": -3300, "max_chars": 44,
+            }
+        # 각주: 굵은 '※ 소제목'은 라벨이지 각주가 아니므로 굵지 않은 것만 센다
+        notes = [p for p in self.paras if p["text"][:1] in NOTE_CHARS]
+        plain = [p for p in notes if not p["cs"].get("bold")] or notes
+        if plain:
+            mk = Counter(p["text"][0] for p in plain).most_common(1)[0][0]
+            size = Counter(p["cs"].get("size", 9.0) for p in plain).most_common(1)[0][0]
+            out["note"] = {"marker": mk, "size": size, "left": 3300, "indent": -2700}
         if any(t["text"][0] in ENUM_CHARS for t in self.paras if t["text"]):
             out["enum_markers"] = ENUM_CHARS[:9]
         self.confidence["special"] = "medium" if out else "low"
@@ -675,8 +739,13 @@ class Extractor:
                 pal[key] = st["fill"]
             if key.endswith("_fg") and st.get("text_color"):
                 pal[key] = st["text_color"]
-        cols = Counter(p["cs"].get("color") for p in self.paras
-                       if p["cs"].get("color") not in (None, "#000000", "#ffffff"))
+        # 강조색: 모든 글자 조각을 글자 수로 가중해 센다(문단 첫 글자만 보면 문장 중간의 강조를 놓친다).
+        # 무채색(검정·회색·흰색)은 강조가 아니라 본문 톤이므로 뺀다.
+        cols = Counter()
+        for t in self.root.iter("Text"):
+            c = self._cs(t.get("charshape-id")).get("color")
+            if chromatic(c):
+                cols[c] += len(t.text or "")
         pal["emphasis"] = cols.most_common(1)[0][0] if cols else "#0000ff"
         self.confidence["palette"] = "high" if pal.get("table_header_bg") else "medium"
         self.evidence["palette"] = (f"배너 번호칸 배경 {pal.get('banner_num_bg', '없음')} · "
@@ -738,6 +807,24 @@ class Extractor:
         c = _C(t["pad_tb"] for t in self.tables if t["cols"] >= 3)
         v = c.most_common(1)[0][0] if c else 141
         if v <= 150:
+            # 여백은 기본값인데 셀 높이를 직접 키워 둔 양식이 많다. 한 줄짜리 셀의
+            # (셀 높이 - 줄 높이) / 2 가 실제로 보이는 위아래 여유다.
+            gaps = []
+            for tb in self.root.iter("TableControl"):
+                body = tb.find("TableBody")
+                if body is None or int(body.get("cols", 0)) < 3 or self._depth(tb) > 0:
+                    continue
+                for cell in body.iter("TableCell"):
+                    segs = cell.findall(".//LineSeg")
+                    h = int(cell.get("height", 0))
+                    if len(segs) == 1 and h >= 1000:
+                        gaps.append((h - int(segs[0].get("height", 0))) // 2)
+            if len(gaps) >= 5:
+                med = sorted(gaps)[len(gaps) // 2]
+                val = max(240, min(900, med))
+                self.evidence["padding_tb"] = (f"원본 여백 {v}(기본값)이나 한 줄 셀 {len(gaps)}개의 "
+                                               f"(셀 높이-줄 높이)/2 중앙값 {med} → {val}")
+                return val
             self.evidence["padding_tb"] = f"원본 {v}(한글 기본값) → 가독을 위해 240으로 올림"
             return 240
         self.evidence["padding_tb"] = f"원본 실측 {v}"
@@ -762,31 +849,73 @@ class Extractor:
             if t0["cols"] == 1 and has_text:
                 title_boxed = True
         order, date_fmt = [], "( {date} )"
+        styles = {"date": {"size": 11.0, "bold": False, "align": "center"},
+                  "dept": {"size": 11.0, "bold": True, "align": "center"}}
+
+        def style_of(p, fallback):
+            al = {"right": "right", "center": "center", "left": "left"}.get(p["ps"].get("align"), fallback["align"])
+            return {"size": p["cs"].get("size") or fallback["size"],
+                    "bold": bool(p["cs"].get("bold")), "align": al}
+
         for p in head:
             t = p["text"]
             if re.match(r"^\(?\s*\d{4}[.\-]\s?\d{1,2}", t):
                 order.append("date")
-                date_fmt = "( {date} )" if t.strip().startswith("(") else "{date}"
-            elif re.search(r"(부|팀|실|과|본부|센터)$", t) and len(t) <= 20:
+                # 괄호 안쪽 공백까지 원본대로: "(2026. 08. 26.)" 과 "( 2026. 08. 26. )" 은 다른 양식이다
+                if t.startswith("(") and not t.startswith("( "):
+                    date_fmt = "({date})"
+                elif t.startswith("("):
+                    date_fmt = "( {date} )"
+                else:
+                    date_fmt = "{date}"
+                styles["date"] = style_of(p, styles["date"])
+            elif re.search(r"(부|팀|실|과|본부|센터)$", t.strip("- ").strip()) and len(t) <= 24:
+                # "- 리스크관리부 -" 처럼 줄표로 감싼 부서명도 부서 줄로 본다
                 order.append("dept")
+                styles["dept"] = style_of(p, styles["dept"])
         order = ["title"] + [o for o in order if o]
         if "date" not in order:
             order.append("date")
         if "dept" not in order:
             order.append("dept")
+        title_color, subtitle = None, None
+        if title_boxed:
+            tb0 = next(self.root.iter("TableControl"))
+            cell = next(tb0.iter("TableCell"))
+            cps = []
+            for p in cell.iter("Paragraph"):
+                txt = "".join(t.text or "" for t in p.iter("Text")).strip()
+                if txt:
+                    cps.append(self._cs(next((t.get("charshape-id") for t in p.iter("Text")), None)))
+            if cps:
+                ti = max(range(len(cps)), key=lambda i: cps[i].get("size", 0))
+                if cps[ti].get("color") not in (None, "#000000"):
+                    title_color = cps[ti]["color"]
+                if ti + 1 < len(cps):        # 제목 아래 같은 박스 안의 줄 = 부제
+                    s = cps[ti + 1]
+                    subtitle = {"size": s.get("size", 11.0), "bold": bool(s.get("bold")),
+                                "in_box": True}
+                    if s.get("color") not in (None, "#000000"):
+                        subtitle["color"] = s["color"]
         self.confidence["cover"] = "medium"
         self.evidence["cover"] = (f"제목 {'표 안' if title_boxed else '문단'} · "
                                   f"{biggest['cs']['size'] if biggest else '?'}pt · 순서 {order}")
-        return {
-            "title": {"impl": "boxed" if title_boxed else "paragraph",
-                      "size": biggest["cs"]["size"] if biggest else 16.0,
-                      "bold": bool(biggest and biggest["cs"].get("bold")),
-                      "align": "center", "width": "body"},
-            "date": {"size": 11.0, "bold": False, "align": "center"},
-            "dept": {"size": 11.0, "bold": True, "align": "center"},
+        title = {"impl": "boxed" if title_boxed else "paragraph",
+                 "size": biggest["cs"]["size"] if biggest else 16.0,
+                 "bold": bool(biggest and biggest["cs"].get("bold")),
+                 "align": "center", "width": "body"}
+        if title_color:
+            title["color"] = title_color
+        out = {
+            "title": title,
+            "date": styles["date"],
+            "dept": styles["dept"],
             "order": order,
             "date_format": date_fmt,
         }
+        if subtitle:
+            out["subtitle"] = subtitle
+        return out
 
     # ── 조립 ──────────────────────────────────────────────────────────
     def build(self, name):

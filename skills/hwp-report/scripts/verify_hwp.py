@@ -30,14 +30,55 @@ def load_geometry(template_ref):
         return dict(_GEOM), False
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from build_hwp import load_template
-    g = load_template(template_ref)["page"]
+    tpl = load_template(template_ref)
+    g = tpl["page"]
     hp = 1 / 7200 * 72   # HWPUNIT → pt
     return {
         "body_width": g["body_width"],
         "margin_lr_pt": g["margin_left"] * hp,
         "margin_top_pt": (g["margin_top"] + g.get("header_len", 0)) * hp,
         "margin_bot_pt": (g["margin_bottom"] + g.get("footer_len", 0)) * hp,
+        "outline": outline_rules(tpl),
+        # 양식이 실제로 쓰는 색(표지 남색 제목, 회색 부제 등)은 허용한다
+        "colors": sorted(set(re.findall(r"#[0-9a-fA-F]{6}", json.dumps(tpl)))),
     }, True
+
+
+# 번호 표기 → 문단 첫머리 정규식 (표 안의 번호칸은 번호만 있으므로 fullmatch 용)
+_NUM_RE = {
+    "roman": r"[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]\.?",
+    "arabic": r"\d{1,2}",
+    "arabic_dot": r"\d{1,2}\.",
+    "arabic_paren": r"\(?\d{1,2}\)",
+    "hangul_dot": r"[가-하]\.",
+}
+
+
+def outline_rules(tpl):
+    """템플릿의 제목·사다리 정의 → 계층 판정 규칙.
+    반환: {"heads": [(레벨, 표안여부, 정규식)], "bullets": [(레벨, 기호)]}"""
+    heads = []
+    for lvl in ("h1", "h2", "h3"):
+        h = tpl.get("headings", {}).get(lvl) or {}
+        if h.get("marker") == "symbol":
+            heads.append((lvl, False, re.escape(h.get("symbol", "■")) + r"\s"))
+            continue
+        num = _NUM_RE.get(h.get("marker"))
+        if not num:
+            continue
+        if h.get("impl") == "banner_table":
+            heads.append((lvl, True, num))
+        else:
+            heads.append((lvl, False, num + r"\s"))
+    bullets = [(f"b{i + 1}", st["marker"]) for i, st in enumerate(tpl.get("ladder", [])[:4])]
+    return {"heads": heads, "bullets": bullets}
+
+
+# 템플릿이 없을 때의 기본 판정 (배너 Ⅰ·숫자, 문단 '1.', 불릿 □ ∙ → ↳)
+_DEFAULT_OUTLINE = {
+    "heads": [("h1", True, r"[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]\.?"), ("h2", True, r"\d{1,2}"), ("h3", False, r"\d{1,2}\.\s")],
+    "bullets": [("b1", "□"), ("b2", "∙"), ("b3", "→"), ("b3", "↳")],
+}
 
 ROMAN = "ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ"
 # 꼬리말의 쪽 번호(- 1 -, 1 등)는 아래 여백에 있는 것이 정상이므로 침범 검사에서 제외한다
@@ -137,9 +178,12 @@ def check_structure(hwp_path: Path, rep: Report, workdir: Path, geom=None):
             if len(uniq) > 1:
                 rep.add("warn", "STRUCT",
                         f"행마다 셀 수가 다릅니다 {sorted(uniq)} — 의도한 병합인지 확인", where)
+        # 3칸 배너(번호 | 빈칸 | 제목)의 가운데 빈칸은 장식용이라 비어 있는 것이 정상이다
+        banner_gap = (t["rows"] == 1 and t["cols"] == 3 and t["texts"] and len(t["texts"][0]) == 3
+                      and re.fullmatch(r"[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]\.?|\d{1,2}\.?", t["texts"][0][0].strip() or "x"))
         for ri, row in enumerate(t["texts"]):
             for ci, v in enumerate(row):
-                if v == "":
+                if v == "" and not (banner_gap and ci == 1):
                     rep.add("warn", "R8", f"빈 셀 (행{ri + 1}, 열{ci + 1}) — '-'를 넣으세요", where)
 
     # ── 글꼴 / 색 / 크기 ──
@@ -163,32 +207,35 @@ def check_structure(hwp_path: Path, rep: Report, workdir: Path, geom=None):
     rep.info["colors"] = sorted(c for c in colors if c)
     if len(faces) > 1:
         rep.add("warn", "R6", f"글꼴이 {len(faces)}종 혼용됨: {sorted(faces)}")
+    allowed = {"#000000", "#0000ff", "#ffffff"} | {c.lower() for c in (geom or {}).get("colors", [])}
     for c in colors:
-        if c and c not in ("#000000", "#0000ff", "#ffffff"):
+        if c and c.lower() not in allowed:
             rep.add("warn", "R7", f"허용되지 않은 글자색 {c} (검정/파랑/흰색만)")
 
     # ── 계층 순서 (R5) ──
+    # 제목·불릿 판정은 양식(템플릿)이 정한다. 없으면 기본 규칙.
+    outline = (geom or {}).get("outline") or _DEFAULT_OUTLINE
     seq = []
     for p in paragraphs:
-        if p["depth"] > 0:
-            t = p["text"]
-            if t and t[0] in ROMAN:
-                seq.append(("h1", t[:20]))
-            elif re.fullmatch(r"\d{1,2}", t.strip()):
-                seq.append(("h2", t.strip()))
-            continue
         t = p["text"]
-        if re.match(r"^\d{1,2}\.\s", t):
-            seq.append(("h3", t[:20]))
-        elif t.startswith("□"):
-            seq.append(("b1", t[:20]))
-        elif t.startswith("∙"):
-            seq.append(("b2", t[:20]))
-        elif t.startswith(("→", "↳")):
-            seq.append(("b3", t[:20]))
+        in_table = p["depth"] > 0
+        kind = None
+        for lvl, in_tbl, pat in outline["heads"]:
+            if in_tbl != in_table:
+                continue
+            if (re.fullmatch(pat, t.strip()) if in_tbl else re.match(pat, t)):
+                kind = lvl
+                break
+        if kind is None and not in_table:
+            for lvl, mk in outline["bullets"]:
+                if t.startswith(mk):
+                    kind = lvl
+                    break
+        if kind:
+            seq.append((kind, t[:20]))
 
-    # 제목(h*) 다음에 바로 b1(□)이 오는 것은 정상 흐름이다. 불릿끼리의 건너뜀만 본다.
-    bullet_order = {"b1": 1, "b2": 2, "b3": 3}
+    # 제목(h*) 다음에 바로 첫 불릿이 오는 것은 정상 흐름이다. 불릿끼리의 건너뜀만 본다.
+    bullet_order = {"b1": 1, "b2": 2, "b3": 3, "b4": 4}
     head_order = {"h1": 1, "h2": 2, "h3": 3}
     prev_b = None
     prev_h = None
@@ -381,7 +428,8 @@ def check_content(doc_json: Path, pdf_path: Path, rep: Report):
     def want(s, where):
         if not s:
             return
-        if re.sub(r"\s+", "", str(s)) in flat:
+        s = str(s).replace("**", "")      # 구절 강조 표기는 결과물에 글자로 남지 않는다
+        if re.sub(r"\s+", "", s) in flat:
             return
         rep.add("error", "CONTENT", f"문서 모델의 내용이 결과물에 없습니다(오염 또는 누락): '{str(s)[:40]}'", where)
 
