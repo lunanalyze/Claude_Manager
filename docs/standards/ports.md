@@ -168,6 +168,7 @@ ssh -N -L 13010:localhost:3010 orca    # orca의 3010 → 내 13010
 | 8230 | AI IB Agent | FastAPI + uvicorn | **8767** | 미적용(제안) | `launcher.py:35` |
 | 8240 | 조사연구 자동화 | FastAPI | **8765** | 미적용(제안) | `app.py:38` |
 | 8250 | (해외사업팀) 조사연구 자동화 | FastAPI | **8766** | 미적용(제안) | `app.py:38` |
+| 8280 | AI_Education (`Desktop\Github\AI_Education`) | Cloudflare `wrangler dev` (Worker + 정적 사이트) | 8280 | **적용** | `site/package.json` (`wrangler dev --port 8280 --ip 127.0.0.1`) |
 
 ### 배정하지 않음 — 포크·백업·미러
 
