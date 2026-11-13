@@ -1,0 +1,13 @@
+# Agent 평가셋 — 채점은 '정답 문장'이 아니라 "필요한 데이터에 도달했는가"
+#   expect.tool + key(인자 값 중 하나) 를 성공한 도구 호출 중에서 찾으면 통과
+#   any_of / all_of 로 여러 조건, clarify_first: true 면 첫 응답이 되묻기(ask_user)여야 통과
+#   turns 의 두 번째 이후 발화는 Agent 가 되물었을 때만 보낸다
+# 주의: 개발 중 보며 고친 문항은 과적합된다 → 손대지 않는 보류 세트(hold: true)를 따로 둔다
+- { id: D01, cat: 단순조회, turns: ["전주 아파트 최근 낙찰가율 알려줘"],
+    expect: { tool: get_rate, key: 전주 } }
+- { id: D02, cat: 비교, turns: ["전주와 군산 근린상가 비교해줘"],
+    expect: { all_of: [{ tool: get_rate, key: 전주 }, { tool: get_rate, key: 군산 }] } }
+- { id: Q01, cat: 역질문, turns: ["LTV 바꾸면 어떻게 돼?", "전주 아파트를 60%로"],
+    expect: { tool: simulate, key: 전주, clarify_first: true } }
+- { id: H01, cat: 열린질문, hold: true, turns: ["요즘 제일 위험한 담보가 뭐야?"],
+    expect: { any_of: [{ tool: get_signals }, { tool: get_rate }] } }
