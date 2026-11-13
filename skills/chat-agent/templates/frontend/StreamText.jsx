@@ -8,7 +8,7 @@
 // - 처음부터 완성본(저장된 대화, final 교체)이면 애니메이션 없이 바로 보여 준다
 // Markdown 컴포넌트는 react-markdown + remark-gfm + remark-breaks + remark-cjk-friendly 권장
 //   (remark-cjk-friendly: "**176.41%**로"처럼 닫는 ** 뒤에 한글이 붙어도 굵게로 인식)
-import { useEffect, useRef, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 
 const SLOWDOWN = 2;      // 도착 속도의 1/2
 const MIN_CPS = 12;      // 초당 최소 글자
@@ -32,13 +32,13 @@ export default function StreamText({ text, streaming, Markdown }) {
     const target = useRef(text);
     const [shown, setShown] = useState(streaming ? 0 : text.length);
     const pos = useRef(shown);
-    const rate = useRef({ cps: FALLBACK_CPS, lastLen: text.length, lastT: performance.now() });
+    const rate = useRef({ cps: FALLBACK_CPS, lastLen: text.length, lastT: 0 }); // 렌더 중 performance.now() 금지(순수성)
 
     useEffect(() => {
         const now = performance.now();
         const r = rate.current;
         const added = text.length - r.lastLen;
-        if (added > 0 && now > r.lastT) {
+        if (added > 0 && r.lastT && now > r.lastT) {
             const measured = (added / (now - r.lastT)) * 1000;
             r.cps = Math.max(MIN_CPS, measured / SLOWDOWN);
         }
@@ -67,15 +67,15 @@ export default function StreamText({ text, streaming, Markdown }) {
         };
         raf = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(raf);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const visible = (streaming ? target.current : text).slice(0, streaming ? shown : text.length);
-    if (!streaming) return <Markdown>{visible}</Markdown>;
+    const visible = text.slice(0, streaming ? shown : text.length); // 렌더 중에는 ref 를 읽지 않는다
+    // Markdown 은 prop 으로 받은 컴포넌트 — createElement 로 그린다(일부 lint 가 JSX 사용을 못 알아봄)
+    if (!streaming) return createElement(Markdown, null, visible);
     const [done, tail] = splitStable(visible);
     return (
         <div>
-            {done && <Markdown>{done}</Markdown>}
+            {done && createElement(Markdown, null, done)}
             <span className="whitespace-pre-wrap">{tail}</span>
             <span className="stream-caret" aria-hidden="true">▍</span>
         </div>

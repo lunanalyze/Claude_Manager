@@ -73,6 +73,10 @@ def normalize_args(args: dict) -> dict:
     return out
 
 
+class ToolError(Exception):
+    """LLM 에게 그대로 돌려줄 안내(고칠 방법 포함). 예: raise ToolError("'화성'은 지역구분에 없습니다. 사용할 수 있는 지역: …")"""
+
+
 def ok(payload, numbers=(), title: str = "") -> dict:
     return {"ok": True, "errors": [], "payload": payload,
             "numbers": [float(x) for x in numbers if x is not None], "title": title}
@@ -88,6 +92,8 @@ def call_tool(name: str, args: dict) -> dict:
         return fail(f"알 수 없는 도구: {name}")
     try:
         res = t["fn"](**normalize_args(args))
+    except ToolError as e:
+        return fail(str(e))
     except KeyError as e:
         return fail(f"찾을 수 없는 값: {str(e).strip(chr(39) + chr(34))}. 사용할 수 있는 값을 먼저 조회하세요.")
     except Exception as e:  # noqa: BLE001 — 턴을 멈추지 않는 것이 목적
